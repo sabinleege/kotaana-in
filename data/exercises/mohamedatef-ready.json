@@ -1,0 +1,29 @@
+[
+  {
+    "id": "moh-H1PESYI",
+    "name": "stationary bike run",
+    "equipment": "stationary bike",
+    "bodyPart": "cardio",
+    "target": "cardiovascular system",
+    "secondaryMuscles": [
+      "quadriceps",
+      "hamstrings",
+      "calves"
+    ],
+    "category": "strength",
+    "instructions": "Step:1 Adjust the seat height and position to ensure proper alignment. Step:2 Place your feet on the pedals and secure them with the straps if available. Step:3 Start pedaling at a comfortable pace. Step:4 Maintain a steady rhythm and increase the resistance as desired. Step:5 Engage your core muscles to maintain stability and proper posture. Step:6 Continue pedaling for the desired duration of your workout. Step:7 Gradually decrease the resistance and slow down before coming to a complete stop. Step:8 Stretch your legs and cool down after the workout.",
+    "steps": [
+      "Step:1 Adjust the seat height and position to ensure proper alignment.",
+      "Step:2 Place your feet on the pedals and secure them with the straps if available.",
+      "Step:3 Start pedaling at a comfortable pace.",
+      "Step:4 Maintain a steady rhythm and increase the resistance as desired.",
+      "Step:5 Engage your core muscles to maintain stability and proper posture.",
+      "Step:6 Continue pedaling for the desired duration of your workout.",
+      "Step:7 Gradually decrease the resistance and slow down before coming to a complete stop.",
+      "Step:8 Stretch your legs and cool down after the workout."
+    ],
+    "image": null,
+    "gif": "https://raw.githubusercontent.com/mohamedatef90/exercise-library/main/gifs/H1PESYI.gif",
+    "source": "mohamedatef90/exercise-library"
+  }
+]

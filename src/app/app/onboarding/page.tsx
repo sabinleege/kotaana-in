@@ -1,0 +1,1 @@
+import {AthleteFrame} from '@/app/app-layout';import {OnboardingForm} from '@/components/OnboardingForm';export default function Onboarding(){return <AthleteFrame><OnboardingForm role="athlete"/></AthleteFrame>}

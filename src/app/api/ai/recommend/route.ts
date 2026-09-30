@@ -1,0 +1,1 @@
+import {NextResponse} from 'next/server';import {apiAuth} from '@/lib/auth/guard';import {aiProvider} from '@/lib/ai/router';export async function GET(){const a=await apiAuth('athlete','coach','admin');if('error'in a)return a.error;return NextResponse.json({configured:Boolean(aiProvider()),provider:aiProvider()});}

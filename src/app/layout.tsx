@@ -1,0 +1,3 @@
+import "./globals.css";
+export const metadata={title:"Kotaana — Train. Track. Achieve.",description:"Personalized training, nutrition, health, progress and coaching."};
+export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="en" data-theme="system"><head><script dangerouslySetInnerHTML={{__html:`(()=>{try{const t=localStorage.getItem("kotaana-theme");if(t==="dark"||t==="light"||t==="system"){document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t==="light"?"light":t==="dark"?"dark":"light dark"}}catch(e){}})()`}} /></head><body>{children}</body></html>}

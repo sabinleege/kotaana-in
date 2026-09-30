@@ -1,0 +1,1330 @@
+{
+  "generatedAt": "2026-09-23T14:48:39.976768Z",
+  "sources": [
+    {
+      "file": "bryllim-ready.json",
+      "records": 256
+    },
+    {
+      "file": "free-exercise-db-ready.json",
+      "records": 745
+    },
+    {
+      "file": "mohamedatef-ready.json",
+      "records": 1
+    }
+  ],
+  "duplicates": 0,
+  "records": 1002,
+  "quality": {
+    "complete": 0,
+    "partial": 1002
+  },
+  "warnings": [
+    {
+      "id": "bryllim-bench-press",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-incline-bench-press",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-incline-dumbbell-press",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-decline-bench-press",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-machine-chest-press",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-pec-deck",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-cable-fly",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-weighted-push-up",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-overhead-press",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-arnold-press",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-lateral-raise",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-front-raise",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-rear-delt-fly",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-reverse-pec-deck",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-face-pull",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-upright-row",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-deadlift",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-romanian-deadlift",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-barbell-row",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-t-bar-row",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-one-arm-dumbbell-row",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-chest-supported-row",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-seated-row",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-machine-row",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-lat-pulldown",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-close-grip-lat-pulldown",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-straight-arm-pulldown",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-front-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-hack-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-leg-press",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-bulgarian-split-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-step-up",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-leg-extension",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-leg-curl",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-seated-leg-curl",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-hip-thrust",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-glute-bridge",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-good-morning",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-standing-calf-raise",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-seated-calf-raise",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-bicep-curl",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-hammer-curl",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-preacher-curl",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-reverse-curl",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-wrist-curl",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-tricep-pushdown",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-overhead-tricep-extension",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-skull-crusher",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-close-grip-bench-press",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-dip",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-assisted-dip",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-plank",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-side-plank",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-cable-crunch",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-ab-wheel",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-running",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-walking",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-cycling",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-rowing",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-stair-climber",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-incline-cable-fly",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-decline-dumbbell-press",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-smith-machine-bench-press",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-landmine-press",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-weighted-dip",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-machine-shoulder-press",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-standing-dumbbell-press",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-push-press",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-machine-lateral-raise",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-plate-front-raise",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-bent-over-rear-delt-raise",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-cable-rear-delt-fly",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-pendlay-row",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-meadows-row",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-single-arm-cable-row",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-wide-grip-lat-pulldown",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-neutral-grip-pull-up",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-assisted-chin-up",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-weighted-chin-up",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-rack-pull",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-back-extension",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-goblet-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-smith-machine-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-belt-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-sumo-deadlift",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-lying-leg-curl",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-nordic-hamstring-curl",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-single-leg-romanian-deadlift",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-reverse-lunge",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-split-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-hip-abduction-machine",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-single-leg-glute-bridge",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-dumbbell-glute-bridge",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-dumbbell-hip-thrust",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-smith-machine-hip-thrust",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-smith-machine-romanian-deadlift",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-kettlebell-romanian-deadlift",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-cable-pull-through",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-machine-glute-kickback",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-cable-standing-hip-abduction",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-cable-standing-hip-adduction",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-hip-adduction-machine",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-smith-machine-bulgarian-split-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-smith-machine-reverse-lunge",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-smith-machine-split-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-heel-elevated-goblet-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-dumbbell-sumo-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-dumbbell-sumo-deadlift",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-front-foot-elevated-split-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-deficit-reverse-lunge",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-dumbbell-lateral-lunge",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-dumbbell-curtsy-lunge",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-landmine-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-landmine-romanian-deadlift",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-glute-focused-back-extension",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-reverse-hyperextension",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-leg-press-calf-raise",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-wall-sit",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-incline-dumbbell-curl",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-concentration-curl",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-ez-bar-curl",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-spider-curl",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-rope-hammer-curl",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-drag-curl",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-rope-tricep-pushdown",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-dumbbell-skull-crusher",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-single-dumbbell-skullcrusher",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-dumbbell-overhead-tricep-extension",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-single-arm-dumbbell-tricep-extension",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-bench-dip",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-tricep-kickback",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-wrist-extension",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-farmer-carry",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-crunch",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-bicycle-crunch",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-bird-dog",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-pallof-press",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-cable-woodchop",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-half-kneeling-pallof-press",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-cable-pallof-hold",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-hanging-knee-raise",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-captains-chair-knee-raise",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-elliptical",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-swimming",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-assault-bike",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-skierg",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-hiking",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-treadmill-incline-walk",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-battle-ropes",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-knee-push-up",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-wide-push-up",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-pike-push-up",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-feet-elevated-pike-push-up",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-typewriter-push-up",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-explosive-push-up",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-hindu-push-up",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-scapular-push-up",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-push-up-shoulder-tap",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-wall-push-up",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-wall-walk",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-wall-handstand-push-up",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-chair-dip",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-doorway-row",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-towel-row",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-prone-y-raise",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-prone-t-raise",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-superman",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-superman-hold",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-reverse-snow-angel",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-dead-hang",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-active-hang",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-negative-pull-up",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-commando-pull-up",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-l-sit-pull-up",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-towel-pull-up",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-bodyweight-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-pistol-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-assisted-pistol-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-shrimp-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-cossack-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-forward-lunge",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-lateral-lunge",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-curtsy-lunge",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-skater-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-single-leg-box-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-step-down",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-calf-raise",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-single-leg-calf-raise",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-frog-pump",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-donkey-kick",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-fire-hydrant",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-clamshell",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-hip-airplane",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-side-lying-hip-abduction",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-side-lying-leg-raise",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-lying-hamstring-walkout",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-towel-hamstring-curl",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-stability-ball-hamstring-curl",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-banded-glute-bridge",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-banded-hip-thrust",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-banded-frog-pump",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-banded-clamshell",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-banded-lateral-walk",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-banded-monster-walk",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-banded-squat",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-banded-donkey-kick",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-banded-fire-hydrant",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-banded-kickback",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-banded-standing-hip-abduction",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-banded-seated-hip-abduction",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-band-pull-apart",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-banded-face-pull",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-banded-row",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-banded-lat-pulldown",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-banded-pallof-press",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-banded-woodchop",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-banded-dead-bug",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-hollow-body-hold",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-hollow-rock",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-v-up",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-flutter-kick",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-lying-leg-raise",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-toe-touch",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-heel-tap",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-plank-shoulder-tap",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-plank-jack",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-bear-plank",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-crab-walk",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-l-sit-hold",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-seated-knee-tuck",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-side-plank-hip-dip",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-copenhagen-plank",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-dragon-flag",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-half-burpee",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-squat-thrust",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-high-knees",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-jumping-jack",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-skater-hop",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-lateral-shuffle",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-fast-feet",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-sprawl",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-seal-jack",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-cat-cow-stretch",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-arm-circles",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-worlds-greatest-stretch",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-leg-swings-stretch",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-torso-twist-stretch",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-doorway-chest-stretch",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-childs-pose",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-kneeling-hip-flexor-stretch",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-standing-quad-stretch",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-seated-forward-fold-stretch",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-cross-body-shoulder-stretch",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-wall-calf-stretch",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "bryllim-butterfly-stretch",
+      "file": "bryllim-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "fedb-Iron_Cross",
+      "file": "free-exercise-db-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "fedb-One-Arm_Kettlebell_Swings",
+      "file": "free-exercise-db-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "fedb-Push_Press",
+      "file": "free-exercise-db-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "fedb-Side_Bridge",
+      "file": "free-exercise-db-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    },
+    {
+      "id": "fedb-Side_Jackknife",
+      "file": "free-exercise-db-ready.json",
+      "warning": "Missing instructions; human safety review required before activation."
+    }
+  ]
+}

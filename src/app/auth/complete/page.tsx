@@ -1,0 +1,1 @@
+import {auth} from '@/auth';import {redirect} from 'next/navigation';import {homePath} from '@/lib/auth/role';export default async function Complete(){const s=await auth();if(!s?.user?.id)redirect('/auth?mode=login');redirect(homePath(s.user.role as any));}

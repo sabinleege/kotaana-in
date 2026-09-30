@@ -1,0 +1,1 @@
+import {NextResponse} from 'next/server';import {prisma} from '@/lib/db/prisma';import {apiAuth} from '@/lib/auth/guard';export async function GET(){const a=await apiAuth('athlete','coach','admin');if('error'in a)return a.error;const c=await prisma.appConfig.findUnique({where:{key:'platform_momo_code'}});return NextResponse.json({code:c?.value||''});}
