@@ -22,8 +22,8 @@ export default async function CoachOverview() {
   const nameOf = (u: { name: string | null; email: string; profile: { fullName: string } | null }) => u.profile?.fullName || u.name || u.email;
 
   return <div className="stack" style={{ gap: 16 }}>
-    <PageHead eyebrow="COACH" title={`Welcome back, ${(profile?.fullName || s.user.name || "Coach").split(" ")[0]}`} sub="Your team at a glance — every number comes from recorded athlete data.">
-      <Link className="btn secondary" href="/coach/follow-ups">+ Follow-up</Link><Link className="btn primary" href="/coach/invites">+ Invite athlete</Link>
+    <PageHead eyebrow="GYM" title={`Welcome back, ${(profile?.fullName || s.user.name || "Coach").split(" ")[0]}`} sub="Your team at a glance — every number comes from recorded athlete data.">
+      <Link className="btn secondary" href="/coach/follow-ups">+ Follow-up</Link><Link className="btn primary" href="/coach/invites">+ Invite member</Link>
     </PageHead>
     <div className="statGrid">
       <Stat label="Active athletes" value={active.length} hint={`${signals.length} on roster`} />

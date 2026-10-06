@@ -8,6 +8,15 @@ const body = z.object({ code: z.string().trim().min(4).max(32) });
 export async function POST(req: Request) {
   const a = await apiAuth("athlete"); if ("error" in a) return a.error;
   const p = body.safeParse(await req.json().catch(() => null)); if (!p.success) return NextResponse.json({ error: "Enter the invite code from your coach." }, { status: 400 });
+  // A gym's permanent code (shown on its Profile page) joins the athlete directly, like a one-time invite.
+  const gym = await prisma.profile.findFirst({ where: { connectCode: p.data.code.toUpperCase(), user: { role: "coach" } }, select: { userId: true, fullName: true } });
+  if (gym) {
+    await prisma.$transaction([
+      prisma.coachAthleteRelation.upsert({ where: { coachId_athleteId: { coachId: gym.userId, athleteId: a.session.user.id } }, create: { coachId: gym.userId, athleteId: a.session.user.id, status: "active", requestedByRole: "athlete" }, update: { status: "active" } }),
+      prisma.notification.create({ data: { userId: gym.userId, title: "New member joined", message: `${a.session.user.name || a.session.user.email} joined with your gym code.`, type: "connection" } }),
+    ]);
+    return NextResponse.json({ ok: true, coachName: gym.fullName || "your gym" });
+  }
   const invite = await prisma.coachInvite.findUnique({ where: { inviteCode: p.data.code.toUpperCase() }, include: { coach: { select: { name: true, profile: { select: { fullName: true } } } } } });
   if (!invite || invite.status !== "pending") return NextResponse.json({ error: "This invite code is not valid or was already used." }, { status: 404 });
   if (invite.expiresAt < new Date()) { await prisma.coachInvite.update({ where: { id: invite.id }, data: { status: "expired" } }); return NextResponse.json({ error: "This invite has expired. Ask your coach for a new one." }, { status: 410 }); }

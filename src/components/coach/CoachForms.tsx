@@ -121,7 +121,7 @@ export function ConnectForm() {
 
 export function CoachNameForm({ initial }: { initial: string }) {
   const { busy, msg, run } = useAction(); const [name, setName] = useState(initial);
-  return <div className="stack" style={{ gap: 8 }}><label className="label" style={{ margin: 0 }}>Coach / gym name (shown to athletes)</label><div className="row" style={{ flexWrap: "wrap" }}><input className="input" style={{ flex: "1 1 240px" }} value={name} onChange={(e) => setName(e.target.value)} /><button className="btn primary" disabled={busy || name.trim().length < 2} onClick={() => run("/api/profile", "PATCH", { fullName: name.trim() }, "Name saved.")}>Save</button></div><Msg m={msg} /></div>;
+  return <div className="stack" style={{ gap: 8 }}><label className="label" style={{ margin: 0 }}>Gym / coach name (shown to athletes)</label><div className="row" style={{ flexWrap: "wrap" }}><input className="input" style={{ flex: "1 1 240px" }} value={name} onChange={(e) => setName(e.target.value)} /><button className="btn primary" disabled={busy || name.trim().length < 2} onClick={() => run("/api/profile", "PATCH", { fullName: name.trim() }, "Name saved.")}>Save</button></div><Msg m={msg} /></div>;
 }
 
 export function CsvButton({ rows, filename }: { rows: (string | number | null)[][]; filename: string }) {

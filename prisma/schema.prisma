@@ -38,6 +38,8 @@ model User {
   injuries Injury[]
   dailyCheckins DailyCheckin[]
   hydrationLogs HydrationLog[]
+  gymAttendance Attendance[] @relation("AttendanceGym")
+  attendanceRecords Attendance[] @relation("AttendanceMember")
   runActivities RunActivity[]
   progressPhotos ProgressPhoto[]
   medicalDocuments MedicalDocument[]
@@ -651,4 +653,17 @@ model HydrationLog {
   updatedAt DateTime @updatedAt
   @@unique([userId, date])
   @@map("hydration_logs")
+}
+
+model Attendance {
+  id String @id @default(uuid())
+  gymId String
+  gym User @relation("AttendanceGym", fields: [gymId], references: [id], onDelete: Cascade)
+  athleteId String
+  athlete User @relation("AttendanceMember", fields: [athleteId], references: [id], onDelete: Cascade)
+  date DateTime @db.Date
+  checkedInAt DateTime @default(now())
+  @@unique([gymId, athleteId, date])
+  @@index([gymId, date])
+  @@map("attendance")
 }
