@@ -295,7 +295,7 @@ model WorkoutLog {
   completionRate Float @default(0)
   notes String?
   createdAt DateTime @default(now())
-  @@index([userId, date])
+  @@unique([userId, date])
   @@map("workout_logs")
 }
 

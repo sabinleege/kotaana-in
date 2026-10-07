@@ -1,5 +1,6 @@
 import type { ExerciseRow, PerformanceRecord, SessionMove, UserWorkoutContext, BuiltSession } from "./types";
 import { NoSafeExerciseError } from "./types";
+export { NoSafeExerciseError };
 import { activeRules, capEffort, effortCap } from "@/lib/health/conditions";
 
 const DEFAULTS = { level: "beginner", track: "general", goal: "general_fitness", availableMinutes: 35, equipment: ["bodyweight"] };

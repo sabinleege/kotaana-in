@@ -61,7 +61,7 @@ async function seedExercises() {
   for (const e of CURATED_BASELINE_EXERCISES) {
     if (seen.has(e.id)) continue;
     seen.add(e.id);
-    rows.push({ id:e.id, name:e.name, nameKey:norm(e.name), category:e.category, bodyPart:e.bodyPart, equipment:e.equipment, target:e.target, muscleGroup:e.target, secondaryMuscles:[], instructions:e.instructions, steps:[], image:null, gif:null, frames:null, source:"kotaana_curated_baseline", verified:true, safetyReviewed:true, qualityScore:100, sourceLicense:"Kotaana curated baseline", normalizedVersion:1, ...e });
+    rows.push({ ...e, nameKey:norm(e.name), muscleGroup:e.target, secondaryMuscles:[], steps:[], image:(e as any).image ?? null, gif:null, frames:null, source:"kotaana_curated_baseline", verified:true, safetyReviewed:true, qualityScore:100, sourceLicense:"Kotaana curated baseline", normalizedVersion:1 });
   }
   for (let i=0;i<rows.length;i+=250) await prisma.exercise.createMany({ data: rows.slice(i,i+250), skipDuplicates:true });
   console.log(`Exercises: ${rows.length}`);
@@ -86,7 +86,7 @@ async function seedFoods() {
   const rows:any[]=[];
   const add=(f:any)=> { if (!f?.id || !f?.name) return; const tags=foodTags(f); rows.push({ id:f.id,name:f.name,nameKey:f.nameKey||norm(f.name),brand:f.brand||null,barcode:f.barcode||null,calories:f.calories??null,protein:f.protein??null,carbs:f.carbs??null,fat:f.fat??null,fiber:f.fiber??null,servingSize:f.servingSize||null,servingGrams:f.servingGrams??null,image:f.image||null,source:f.source||"usda",category:f.category||null,verified:true,...tags}); };
   for(const f of foundation) add(f);
-  const legacy = fs.readFileSync(path.join(process.cwd(),"data","foods","usda-sr-legacy.jsonl"),"utf8").split(/\r?\n/).filter(Boolean).map(JSON.parse);
+  const legacy = fs.readFileSync(path.join(process.cwd(),"data","foods","usda-sr-legacy.jsonl"),"utf8").split(/\r?\n/).filter(Boolean).map((line: string) => JSON.parse(line));
   for(const f of legacy) add(f);
   const byId=new Map(rows.map(r=>[r.id,r]));
   const dedup=[...byId.values()];
