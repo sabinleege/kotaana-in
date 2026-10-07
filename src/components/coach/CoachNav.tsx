@@ -3,7 +3,7 @@ import { NavDrawer } from "../NavDrawer";
 
 /** Gym portal menu. Coaches and gyms share one portal: a coach's own gym is their workspace. */
 export function CoachNav({ name, unread, pending }: { name: string; unread: number; pending: number }) {
-  return <NavDrawer name={name} subtitle="Gym" items={[
+  return <NavDrawer homeHref="/coach" name={name} subtitle="Gym" items={[
     { href: "/coach", label: "Dashboard", icon: "⌂", exact: true },
     { href: "/coach/athletes", label: "Members", icon: "👥", badge: pending },
     { href: "/coach/profile", label: "Gym profile", icon: "🏋" },

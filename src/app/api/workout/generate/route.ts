@@ -46,6 +46,24 @@ export async function POST(){
   }
 }
 
+/** Today's session. Created automatically the first time it is needed each day, and rebuilt when a health change (check-in or injury) is recorded after it was made. */
 export async function GET(){
- const a=await apiAuth("athlete"); if("error"in a)return a.error; const now=new Date(); const plan=await prisma.workoutPlan.findFirst({where:{userId:a.session.user.id,date:dateOnly(now),isActive:true},orderBy:{createdAt:"desc"}}); return NextResponse.json({session:plan?.planData??null,planId:plan?.id??null});
+ const a=await apiAuth("athlete"); if("error"in a)return a.error;
+ const userId=a.session.user.id; const now=new Date();
+ const plan=await prisma.workoutPlan.findFirst({where:{userId,date:dateOnly(now),isActive:true},orderBy:{createdAt:"desc"}});
+ const profile=await prisma.profile.findUnique({where:{userId},select:{onboardingCompleted:true}});
+ let reason:string|null=plan?null:"daily_auto";
+ if(plan){
+  const [checkin,injury]=await Promise.all([
+   prisma.dailyCheckin.findUnique({where:{userId_date:{userId,date:dateOnly(now)}},select:{updatedAt:true}}),
+   prisma.injury.findFirst({where:{athleteId:userId,updatedAt:{gt:plan.createdAt}},select:{id:true}}),
+  ]);
+  if((checkin&&checkin.updatedAt>plan.createdAt)||injury)reason="health_change";
+ }
+ if(reason&&profile?.onboardingCompleted){
+  const res=await POST(); const d=res?await res.json().catch(()=>null):null;
+  if(d?.ok)return NextResponse.json({session:d.session,planId:d.planId,auto:reason});
+  if(!plan)return NextResponse.json({session:null,planId:null,error:d?.error||"No safe workout could be built from your current profile."});
+ }
+ return NextResponse.json({session:plan?.planData??null,planId:plan?.id??null});
 }
