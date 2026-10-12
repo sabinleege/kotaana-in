@@ -1,4 +1,31 @@
+import fs from "node:fs";
+import path from "node:path";
 import Link from "next/link";
-import { Logo } from "@/components/Logo";
-const features=["Personalized workouts","Nutrition guidance","Health & recovery","Progress tracking","GPS training","Coach connection"];
-export default function Landing(){return <div className="page"><div className="container"><div className="row spread" style={{padding:"18px 0"}}><Logo/><Link className="btn secondary" href="/auth?mode=login">Log in</Link></div><section className="hero"><span className="pill orange">TRAIN · TRACK · ACHIEVE</span><h1>Build a stronger you, one day at a time.</h1><p>Kotaana combines verified exercise data, personal context, training history and nutrition guidance into a daily fitness system that adapts as you do.</p><div className="row" style={{justifyContent:"center",marginTop:24}}><Link className="btn primary" href="/auth?mode=signup">Create account</Link><Link className="btn secondary" href="/auth?mode=login">Log in</Link></div></section><div className="grid grid3" style={{paddingBottom:40}}>{features.map(f=><div className="card feature" key={f}><div className="sectionTitle" style={{fontSize:16}}>{f}</div><div className="subtitle" style={{marginTop:6}}>Built into the core product.</div></div>)}</div><p className="small dim" style={{textAlign:"center",paddingBottom:22}}>Kotaana is not a replacement for medical care. Health information is used to modify training conservatively.</p></div></div>}
+import { Icon, Wordmark } from "@/components/Brand";
+
+const features = [
+  { icon: "dumbbell", label: "Personalized Workouts" },
+  { icon: "bars", label: "Track Progress" },
+  { icon: "apple", label: "Nutrition Guidance" },
+  { icon: "user", label: "Expert Support" },
+];
+
+export default function Landing() {
+  // A photo is optional: drop one at public/hero.jpg and it is used automatically.
+  const photo = fs.existsSync(path.join(process.cwd(), "public", "hero.jpg"));
+  return <main className={`ktHero${photo ? " photo" : ""}`}>
+    <div className="ktHeroInner">
+      <div className="ktHeroTop"><Wordmark size="lg" /></div>
+      <div className="ktHeroBottom">
+        <h1 className="ktLead">A healthier you,<br />a stronger tomorrow.</h1>
+        <ul className="ktFeatures">{features.map((f) => <li key={f.label}><span className="ktRing"><Icon name={f.icon} size={26} /></span><span>{f.label}</span></li>)}</ul>
+        <div className="ktCtas">
+          <Link className="ktBtn solid" href="/auth?mode=login">Log In</Link>
+          <Link className="ktBtn ghost" href="/auth?mode=signup">Sign Up</Link>
+        </div>
+        <p className="ktJourney"><span />Your Fitness Journey Starts Here<span /></p>
+        <p className="ktFine">Kotaana is not a replacement for medical care. Health information is used to adjust training conservatively.</p>
+      </div>
+    </div>
+  </main>;
+}

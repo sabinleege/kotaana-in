@@ -1,9 +1,49 @@
 "use client";
-import {useState} from 'react';
-export default function CoachFinder(){
- const [q,setQ]=useState('');const [results,setResults]=useState<any[]>([]);const [msg,setMsg]=useState('');const [selectedCoach,setSelectedCoach]=useState<any>(null);const [pay,setPay]=useState<any>({amount:10000,number:'',name:''});
- const search=async()=>{const r=await fetch('/api/connections/search?q='+encodeURIComponent(q));const d=await r.json();if(r.ok)setResults(d.results||[]);else setMsg(d.error)};
- const request=async(id:string)=>{const r=await fetch('/api/connections/request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({coachId:id})});const d=await r.json();setMsg(r.ok?(d.message||'Request sent — the coach will see it in their roster.'):d.error)};
- const payNow=async()=>{if(!selectedCoach){setMsg('Select a coach first.');return}const r=await fetch('/api/payments/momo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amount:Number(pay.amount),payerNumber:pay.number,payerName:pay.name,planType:'coach_service',coachId:selectedCoach.id,idempotencyKey:crypto.randomUUID()})});const d=await r.json();setMsg(r.ok?(d.message||'Payment request created.'):d.error)};
- return <div className="stack"><div><span className="pill orange">COACH</span><h1 style={{fontSize:28,margin:'9px 0 4px'}}>Find a coach</h1><p className="subtitle">Search by name, email or published MoMo details.</p></div><div className="card"><div className="row"><input className="input" value={q} onChange={e=>setQ(e.target.value)} placeholder="Coach name or email"/><button className="btn primary" onClick={search}>Search</button></div>{msg&&<p className="small muted">{msg}</p>}</div><div className="list">{results.map(c=><div className="item" key={c.id}><div><strong>{c.name||c.email}</strong><div className="small muted">{c.momoName||'MoMo not published'} · {c.momoNumber||'No number'}</div></div><button className="btn secondary" onClick={()=>{setSelectedCoach(c);request(c.id)}}>{selectedCoach?.id===c.id?'Selected':'Request'}</button></div>)}{!results.length&&<div className="empty">Search to find coaches.</div>}</div><div className="card"><h2 className="sectionTitle">MoMo payment</h2><p className="subtitle">Select a coach first. The payment is attached to that coach for coach-side approval and uses the coach MoMo number when one is published.</p>{selectedCoach&&<p className="small muted" style={{marginTop:8}}>Selected: <strong>{selectedCoach.name||selectedCoach.email}</strong>{selectedCoach.momoNumber?` · ${selectedCoach.momoNumber}`:''}</p>}<div className="grid grid2" style={{marginTop:12}}><input className="input" type="number" min="100" value={pay.amount} onChange={e=>setPay({...pay,amount:e.target.value})} placeholder="Amount RWF"/><input className="input" value={pay.number} onChange={e=>setPay({...pay,number:e.target.value})} placeholder="Your MoMo number"/><input className="input" value={pay.name} onChange={e=>setPay({...pay,name:e.target.value})} placeholder="MoMo account name"/></div><button className="btn primary" style={{marginTop:12}} onClick={payNow}>Start MoMo payment</button></div></div>
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+
+type Coach = { id: string; name: string; avatar: string | null; city: string | null; priceRwf: number | null; momoNumber: string | null; momoName: string | null };
+
+/** Search coaches by name and pick one; the connection is made immediately. */
+export default function CoachFinder({ currentCoachId, currentCoachName }: { currentCoachId?: string | null; currentCoachName?: string | null }) {
+  const router = useRouter();
+  const [q, setQ] = useState("");
+  const [results, setResults] = useState<Coach[]>([]);
+  const [searched, setSearched] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  useEffect(() => {
+    const term = q.trim();
+    if (term.length < 2) { setResults([]); setSearched(false); return; }
+    const t = setTimeout(async () => {
+      const r = await fetch("/api/connections/search?q=" + encodeURIComponent(term)).catch(() => null);
+      const d = r ? await r.json().catch(() => ({})) : {};
+      if (r?.ok) { setResults(d.results || []); setSearched(true); } else setMsg({ ok: false, text: d.error || "Search failed." });
+    }, 250);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  const choose = async (c: Coach) => {
+    if (currentCoachId && currentCoachId !== c.id && !confirm(`Switch from ${currentCoachName || "your current coach"} to ${c.name}? Your data will go to ${c.name} from now on.`)) return;
+    setBusy(c.id); setMsg(null);
+    const r = await fetch("/api/connections/request", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ coachId: c.id }) }).catch(() => null);
+    const d = r ? await r.json().catch(() => ({})) : {};
+    setBusy(null);
+    setMsg(r?.ok ? { ok: true, text: d.message || "Connected." } : { ok: false, text: d.error || "Could not connect." });
+    if (r?.ok) { setQ(""); router.refresh(); }
+  };
+
+  return <div className="card stack">
+    <div><h2 className="sectionTitle">{currentCoachId ? "Switch coach" : "Find your coach"}</h2><p className="subtitle" style={{ margin: "4px 0 0" }}>Type the name of your coach or gym. Choose them and you are connected straight away.</p></div>
+    <input className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Coach or gym name" autoComplete="off" />
+    {msg && <p className={`small ${msg.ok ? "success" : "danger"}`} style={{ margin: 0 }}>{msg.text}</p>}
+    <div className="list">
+      {results.map((c) => <div className="item" key={c.id}>
+        <div style={{ minWidth: 0 }}><strong>{c.name}</strong><div className="small muted">{[c.city, c.priceRwf ? `${c.priceRwf.toLocaleString()} RWF / 30 days` : "Price not set yet"].filter(Boolean).join(" · ")}</div></div>
+        {c.id === currentCoachId ? <span className="pill">✓ Your coach</span> : <button className="btn primary small" disabled={busy === c.id} onClick={() => choose(c)}>{busy === c.id ? "…" : "Choose"}</button>}
+      </div>)}
+      {searched && !results.length && <div className="empty">No coach found with that name.</div>}
+    </div>
+  </div>;
 }

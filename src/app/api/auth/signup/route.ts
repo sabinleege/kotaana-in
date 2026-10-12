@@ -10,12 +10,13 @@ const schema = z.object({
   password: z.string().min(8).max(100),
   role: z.enum(["athlete", "coach"]),
   dateOfBirth: z.string().date(),
+  gender: z.enum(["male", "female", "other", "prefer_not"]).optional(),
 });
 
 export async function POST(req: Request) {
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid signup details." }, { status: 400 });
-  const { name, email: rawEmail, password, role, dateOfBirth } = parsed.data;
+  const { name, email: rawEmail, password, role, dateOfBirth, gender } = parsed.data;
   const email = rawEmail.toLowerCase();
   const effectiveRole = roleForEmail(email, role);
   const existing = await prisma.user.findUnique({ where: { email } });
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
       name,
       passwordHash,
       role: effectiveRole,
-      profile: { create: { fullName: name, email, dateOfBirth: dob, age, ageBand, onboardingCompleted: false, connectCode: `K${crypto.randomUUID().slice(0, 8).toUpperCase()}` } },
+      profile: { create: { fullName: name, email, dateOfBirth: dob, age, ageBand, gender: gender && gender !== "prefer_not" ? gender : null, onboardingCompleted: false } },
     },
     select: { id: true, email: true, role: true },
   });

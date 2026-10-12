@@ -101,7 +101,7 @@ async function main() {
   if (process.env.ADMIN_BOOTSTRAP_PASSWORD) {
     const { hash } = await import("bcryptjs");
     const passwordHash = await hash(process.env.ADMIN_BOOTSTRAP_PASSWORD, 12);
-    await prisma.user.upsert({ where:{email:adminEmail}, update:{role:"admin",passwordHash}, create:{email:adminEmail,role:"admin",passwordHash,name:"Kotaana Admin",profile:{create:{fullName:"Kotaana Admin",email:adminEmail,onboardingCompleted:true,connectCode:"KADMIN001"}}} });
+    await prisma.user.upsert({ where:{email:adminEmail}, update:{role:"admin",passwordHash}, create:{email:adminEmail,role:"admin",passwordHash,name:"Kotaana Admin",profile:{create:{fullName:"Kotaana Admin",email:adminEmail,onboardingCompleted:true}}} });
   }
   await prisma.appConfig.upsert({ where:{key:"platform_momo_code"}, update:{value:process.env.KOTAANA_PLATFORM_MOMO_CODE||""}, create:{key:"platform_momo_code",value:process.env.KOTAANA_PLATFORM_MOMO_CODE||""} });
   console.log(`Admin: ${adminEmail} (bootstrap password configured: ${Boolean(process.env.ADMIN_BOOTSTRAP_PASSWORD)})`);

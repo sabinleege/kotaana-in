@@ -9,7 +9,10 @@ import { rerankWorkoutCandidates } from '@/lib/ai/workout-rerank';
 import { aiProvider } from '@/lib/ai/router';
 
 function dateOnly(d:Date){return new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()));}
-export async function POST(){
+const LEVELS=["beginner","intermediate","advanced"];
+/** "How hard today": easy steps the exercise level down one notch, hard steps it up one; moderate keeps the athlete's own level. */
+function levelFor(level:string|null,intensity:string|null){const i=Math.max(0,LEVELS.indexOf(level||"beginner"));const shift=intensity==="easy"?-1:intensity==="hard"?1:0;return LEVELS[Math.max(0,Math.min(2,i+shift))];}
+async function build(reason:string){
   const a=await apiAuth("athlete"); if("error"in a)return a.error;
   try{
     const userId=a.session.user.id; const now=new Date(); const since=new Date(now.getTime()-14*86400000);
@@ -27,9 +30,9 @@ export async function POST(){
     const performanceHistory:PerformanceRecord[]=performances.map(p=>({exerciseId:p.exerciseId,effort:p.effort as any,completed:p.completed,setsDone:p.setsDone,repsDone:p.repsDone,durationSec:p.durationSec,date:p.date.toISOString().slice(0,10)}));
     const gymEquipment=(await prisma.profile.findMany({where:{user:{role:"coach",coachRelations:{some:{athleteId:userId,status:"active"}}}},select:{equipment:true}})).flatMap(g=>g.equipment);
     const exercises=await prisma.exercise.findMany({where:{verified:true},take:5000});
-    const aiPreferred=aiProvider()?await rerankWorkoutCandidates(exercises as any, {userId,ageBand:profile.ageBand,level:profile.level,track:profile.track,goal:profile.primaryGoal,availableMinutes:profile.sessionDurationMin,readiness:(await prisma.dailyCheckin.findUnique({where:{userId_date:{userId,date:dateOnly(now)}}}))?.readiness??70}):[];
+    const aiPreferred=aiProvider()?await rerankWorkoutCandidates(exercises as any, {userId,ageBand:profile.ageBand,level:levelFor(profile.level,profile.workoutIntensity),track:profile.track,goal:profile.primaryGoal,availableMinutes:profile.sessionDurationMin,readiness:(await prisma.dailyCheckin.findUnique({where:{userId_date:{userId,date:dateOnly(now)}}}))?.readiness??70}):[];
     const session=buildDailySession(exercises as any,{
-      userId, ageBand:profile.ageBand, level:profile.level, track:profile.track, goal:profile.primaryGoal, equipment:[...new Set([...(profile.equipment.length?profile.equipment:["bodyweight"]),...gymEquipment])], equipmentExclude:profile.equipmentExclude,
+      userId, ageBand:profile.ageBand, level:levelFor(profile.level,profile.workoutIntensity), track:profile.track, goal:profile.primaryGoal, equipment:[...new Set([...(profile.equipment.length?profile.equipment:["bodyweight"]),...gymEquipment])], equipmentExclude:profile.equipmentExclude,
       injuries:injuries.map(i=>({bodyPart:i.bodyPart,restrictions:i.restrictions??undefined,status:i.status})), injuryDataKnown:profile.injuryDataStatus === "known", otherLimitations:profile.otherLimitations, conditions:Array.isArray(profile.healthConditions)?profile.healthConditions.map(String):[], isPregnant:profile.isPregnant, stressLevel:profile.stressLevel, outdoorTrainingOk:profile.outdoorTrainingOk,
       trainingDays:profile.trainingDays, availableMinutes:profile.sessionDurationMin, aiPreferredExerciseIds:aiPreferred, location:profile.locationLat!=null&&profile.locationLng!=null?{lat:profile.locationLat,lng:profile.locationLng,city:profile.locationCity||undefined,country:profile.locationCountry||undefined}:null,
       recentExerciseIds:recentIds, recentMuscleTags:recentMuscles.flatMap(x=>[x.muscleGroup,x.target,...x.secondaryMuscles]).filter(Boolean) as string[], recentMovementPatterns:recentMuscles.map(x=>x.movementPattern).filter(Boolean) as string[], weeklyMuscleTags:weeklyExercises.flatMap(x=>[x.muscleGroup,x.target,...x.secondaryMuscles]).filter(Boolean) as string[], weeklyMovementPatterns:weeklyExercises.map(x=>x.movementPattern).filter(Boolean) as string[], performanceHistory, missedSessions, dayOfWeek:now.getDay(), readiness:(await prisma.dailyCheckin.findUnique({where:{userId_date:{userId,date:dateOnly(now)}}}))?.readiness??70
@@ -37,7 +40,7 @@ export async function POST(){
     const version=(await prisma.workoutPlan.count({where:{userId,date:dateOnly(now)}}))+1;
     const saved=await prisma.$transaction(async tx=>{
       await tx.workoutPlan.updateMany({where:{userId,date:dateOnly(now),isActive:true},data:{isActive:false}});
-      return tx.workoutPlan.create({data:{userId,date:dateOnly(now),planData:session as any,isActive:true,version,regenReason:"manual_generate"}});
+      return tx.workoutPlan.create({data:{userId,date:dateOnly(now),planData:session as any,isActive:true,version,regenReason:reason}});
     });
     return NextResponse.json({ok:true,session,planId:saved.id,version});
   }catch(e){
@@ -45,6 +48,9 @@ export async function POST(){
     logError("api_error",e,{}); return NextResponse.json({ok:false,error:"Workout generation failed. No unsafe fallback was generated."},{status:500});
   }
 }
+
+/** Regenerates today's workout, for example after the athlete changes the questionnaire. */
+export async function POST(){return build("manual_generate");}
 
 /** Today's session. Created automatically the first time it is needed each day, and rebuilt when a health change (check-in or injury) is recorded after it was made. */
 export async function GET(){
@@ -61,7 +67,7 @@ export async function GET(){
   if((checkin&&checkin.updatedAt>plan.createdAt)||injury)reason="health_change";
  }
  if(reason&&profile?.onboardingCompleted){
-  const res=await POST(); const d=res?await res.json().catch(()=>null):null;
+  const res=await build(reason); const d=res?await res.json().catch(()=>null):null;
   if(d?.ok)return NextResponse.json({session:d.session,planId:d.planId,auto:reason});
   if(!plan)return NextResponse.json({session:null,planId:null,error:d?.error||"No safe workout could be built from your current profile."});
  }

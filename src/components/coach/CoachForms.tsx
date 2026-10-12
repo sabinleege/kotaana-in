@@ -97,28 +97,6 @@ export function SessionForm({ athletes }: { athletes: Athlete[] }) {
   </div>;
 }
 
-export function InviteForm() {
-  const { busy, msg, run } = useAction(); const [email, setEmail] = useState("");
-  return <div className="stack" style={{ gap: 8 }}>
-    <div className="row" style={{ flexWrap: "wrap" }}><input className="input" style={{ flex: "1 1 240px" }} type="email" placeholder="Athlete email (optional — leave empty for an open code)" value={email} onChange={(e) => setEmail(e.target.value)} /><button className="btn primary" disabled={busy} onClick={async () => { if (await run("/api/coach/invites", "POST", { email: email || null }, "Invite created — share the code or link below.")) setEmail(""); }}>New invite</button></div>
-    <Msg m={msg} />
-  </div>;
-}
-
-export function CopyButton({ text, label = "Copy link" }: { text: string; label?: string }) {
-  const [done, setDone] = useState(false);
-  const full = text.startsWith("/") && typeof window !== "undefined" ? window.location.origin + text : text;
-  return <button className="btn secondary small" onClick={async () => { try { await navigator.clipboard.writeText(full); setDone(true); setTimeout(() => setDone(false), 1500); } catch { window.prompt("Copy this:", full); } }}>{done ? "✓ Copied" : label}</button>;
-}
-
-export function ConnectForm() {
-  const { busy, msg, run } = useAction(); const [email, setEmail] = useState("");
-  return <div className="stack" style={{ gap: 8 }}>
-    <div className="row" style={{ flexWrap: "wrap" }}><input className="input" style={{ flex: "1 1 240px" }} type="email" placeholder="athlete@email.com" value={email} onChange={(e) => setEmail(e.target.value)} /><button className="btn primary" disabled={busy || !email.includes("@")} onClick={async () => { if (await run("/api/coach/connect", "POST", { email })) setEmail(""); }}>Send request</button></div>
-    <Msg m={msg} />
-  </div>;
-}
-
 export function CoachNameForm({ initial }: { initial: string }) {
   const { busy, msg, run } = useAction(); const [name, setName] = useState(initial);
   return <div className="stack" style={{ gap: 8 }}><label className="label" style={{ margin: 0 }}>Gym / coach name (shown to athletes)</label><div className="row" style={{ flexWrap: "wrap" }}><input className="input" style={{ flex: "1 1 240px" }} value={name} onChange={(e) => setName(e.target.value)} /><button className="btn primary" disabled={busy || name.trim().length < 2} onClick={() => run("/api/profile", "PATCH", { fullName: name.trim() }, "Name saved.")}>Save</button></div><Msg m={msg} /></div>;
@@ -132,17 +110,4 @@ export function CsvButton({ rows, filename }: { rows: (string | number | null)[]
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href);
   };
   return <button className="btn primary" onClick={download}>⬇ Export CSV</button>;
-}
-
-export function PlatformPayForm({ defaultAmount = 20000 }: { defaultAmount?: number }) {
-  const { busy, msg, run } = useAction(); const [f, setF] = useState({ amount: defaultAmount, number: "", name: "" });
-  return <div className="stack" style={{ gap: 10 }}>
-    <div className="formGrid">
-      <div><label className="label">Amount (RWF)</label><input className="input" type="number" min={100} value={f.amount} onChange={(e) => setF({ ...f, amount: Number(e.target.value) })} /></div>
-      <div><label className="label">Your MoMo number</label><input className="input" placeholder="07XXXXXXXX" value={f.number} onChange={(e) => setF({ ...f, number: e.target.value })} /></div>
-      <div><label className="label">MoMo account name</label><input className="input" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></div>
-    </div>
-    <div><button className="btn primary" disabled={busy || f.number.length < 7 || f.name.trim().length < 2 || f.amount < 100} onClick={() => run("/api/payments/momo", "POST", { amount: f.amount, payerNumber: f.number, payerName: f.name.trim(), planType: "coach_plan", idempotencyKey: crypto.randomUUID() }, "Payment request recorded.")}>Submit payment</button></div>
-    <Msg m={msg} />
-  </div>;
 }

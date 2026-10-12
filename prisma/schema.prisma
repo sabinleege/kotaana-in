@@ -47,6 +47,7 @@ model User {
   monthlyProgressReports MonthlyProgressReport[]
   paymentRequests PaymentRequest[]
   exercisePerformances ExercisePerformance[]
+  nutritionPlans NutritionPlan[]
 
   coachRelations CoachAthleteRelation[] @relation("CoachRelations")
   athleteRelations CoachAthleteRelation[] @relation("AthleteRelations")
@@ -55,8 +56,6 @@ model User {
   followUpsCreated FollowUp[] @relation("FollowUpsByCoach")
   followUpsReceived FollowUp[] @relation("FollowUpsForAthlete")
   sessionsCreated TrainingSession[] @relation("SessionsByCoach")
-  invitesSent CoachInvite[] @relation("InvitesByCoach")
-  invitesAccepted CoachInvite[] @relation("InvitesAcceptedBy")
 
   subscriptions Subscription?
   @@map("users")
@@ -175,7 +174,8 @@ model Profile {
   dataConsent Boolean @default(false)
   dataConsentAt DateTime?
   onboardingCompleted Boolean @default(false)
-  connectCode String? @unique
+  membershipPriceRwf Int?
+  workoutIntensity String?
   momoNumber String?
   momoName String?
 
@@ -497,24 +497,6 @@ model TrainingSession {
   @@map("sessions")
 }
 
-model CoachInvite {
-  id String @id @default(uuid())
-  coachId String
-  coach User @relation("InvitesByCoach", fields: [coachId], references: [id], onDelete: Cascade)
-  email String?
-  inviteCode String @unique
-  status String @default("pending")
-  acceptedById String?
-  acceptedBy User? @relation("InvitesAcceptedBy", fields: [acceptedById], references: [id], onDelete: SetNull)
-  acceptedAt DateTime?
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  @@index([coachId])
-  @@index([email])
-  @@map("coach_invites")
-}
-
 model Notification {
   id String @id @default(uuid())
   userId String
@@ -670,4 +652,17 @@ model Attendance {
   @@unique([gymId, athleteId, date])
   @@index([gymId, date])
   @@map("attendance")
+}
+
+/// One generated nutrition plan per athlete per day (AI-planned when a model key is configured, library-based otherwise).
+model NutritionPlan {
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date DateTime @db.Date
+  planJson Json
+  source String @default("library")
+  createdAt DateTime @default(now())
+  @@unique([userId, date])
+  @@map("nutrition_plans")
 }

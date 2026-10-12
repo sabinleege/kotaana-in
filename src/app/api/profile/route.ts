@@ -7,7 +7,7 @@ import { ACTIVITY_OPTIONS, ALCOHOL_OPTIONS, CHRONIC_CONDITIONS, SMOKING_OPTIONS 
 const schema=z.object({
  fullName:z.string().trim().min(2).max(80).optional(),
  avatarUrl:z.string().max(2_000_000).nullable().optional(),
- theme:z.enum(["dark","light","system"]).optional(),
+ theme:z.enum(["dark","light"]).optional(),
  age:z.number().int().min(5).max(110).nullable().optional(),
  dateOfBirth:z.string().date().nullable().optional(),
  gender:z.string().max(30).nullable().optional(),
@@ -19,12 +19,15 @@ const schema=z.object({
  equipmentExclude:z.array(z.string().trim().min(1).max(50)).max(50).optional(),
  trainingDays:z.array(z.number().int().min(0).max(6)).max(7).optional(),
  outdoorTrainingOk:z.boolean().optional(),
+ workoutIntensity:z.enum(["easy","moderate","hard"]).nullable().optional(),
  primaryGoal:z.string().max(50).nullable().optional(),
  track:z.string().max(50).nullable().optional(),
  level:z.enum(["beginner","intermediate","advanced"]).nullable().optional(),
  dietaryStyle:z.array(z.string().max(40)).max(20).optional(),
  allergies:z.array(z.string().max(40)).max(40).optional(),
  targetCalories:z.number().int().min(1200).max(6000).nullable().optional(),
+ mealsPerDay:z.number().int().min(2).max(6).optional(),
+ culturalRestrictions:z.string().max(300).nullable().optional(),
  locationLat:z.number().min(-90).max(90).nullable().optional(),
  locationLng:z.number().min(-180).max(180).nullable().optional(),
  locationCity:z.string().max(80).nullable().optional(),
@@ -57,6 +60,6 @@ export async function PATCH(req:Request){const a=await apiAuth();if("error" in a
  const derivedAgeBand = age == null ? undefined : age < 12 ? "youth_u12" : age < 14 ? "youth_u14" : age < 17 ? "youth_u17" : age >= 65 ? "masters" : "adult";
  const dueDate = parsed.data.pregnancyDueDate ? new Date(`${parsed.data.pregnancyDueDate}T00:00:00.000Z`) : parsed.data.pregnancyDueDate;
  const data = {...parsed.data, ...(dueDate !== undefined ? {pregnancyDueDate:dueDate} : {}), ...(suppliedDob ? {dateOfBirth:suppliedDob} : {}), ...(age != null ? {age} : {}), ...(derivedAgeBand ? {ageBand: derivedAgeBand} : {}), ...(parsed.data.tosAccepted ? {tosAcceptedAt: now} : {}), ...(parsed.data.dataConsent ? {dataConsentAt: now} : {}), ...(parsed.data.medicalDisclaimerAccepted ? {medicalDisclaimerAcceptedAt: now} : {})};
- const p=await prisma.profile.upsert({where:{userId:a.session.user.id},create:{userId:a.session.user.id,fullName:a.session.user.name||"",email:a.session.user.email,connectCode:`K${crypto.randomUUID().slice(0,8).toUpperCase()}`,...data},update:data});await prisma.user.update({where:{id:a.session.user.id},data:{name:p.fullName,image:p.avatarUrl||undefined}});
+ const p=await prisma.profile.upsert({where:{userId:a.session.user.id},create:{userId:a.session.user.id,fullName:a.session.user.name||"",email:a.session.user.email,...data},update:data});await prisma.user.update({where:{id:a.session.user.id},data:{name:p.fullName,image:p.avatarUrl||undefined}});
  if(parsed.data.weight!=null){const last=await prisma.weightHistory.findFirst({where:{userId:a.session.user.id},orderBy:{recordedAt:"desc"}});if(last?.weight!==parsed.data.weight)await prisma.weightHistory.create({data:{userId:a.session.user.id,weight:parsed.data.weight,weekLabel:now.toISOString().slice(0,10)}});}
  return NextResponse.json({ok:true,profile:p});}

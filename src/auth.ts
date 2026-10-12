@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/db/prisma";
+import { cookies } from "next/headers";
 import { ADMIN_EMAIL, roleForEmail } from "@/lib/auth/role";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -36,6 +37,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+  events: {
+    // Accounts created through Google start as athletes; a coach who chose "Coach / Gym" before continuing is upgraded here.
+    async createUser({ user }) {
+      try {
+        const wanted = (await cookies()).get("kotaana_signup_role")?.value;
+        if (wanted === "coach" && user.id) await prisma.user.update({ where: { id: user.id }, data: { role: "coach" } });
+      } catch {}
+    },
+  },
   callbacks: {
     async signIn({ user, account }) {
       if (!user.email) return false;
@@ -48,7 +58,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         await prisma.profile.upsert({
           where: { userId: existing.id },
           update: { fullName: existing.name || user.name || "", email: normalized, avatarUrl: existing.image || user.image || null },
-          create: { userId: existing.id, fullName: existing.name || user.name || "", email: normalized, avatarUrl: existing.image || user.image || null, connectCode: `K${crypto.randomUUID().slice(0, 8).toUpperCase()}` },
+          create: { userId: existing.id, fullName: existing.name || user.name || "", email: normalized, avatarUrl: existing.image || user.image || null },
         });
         return true;
       }
@@ -57,7 +67,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         await prisma.profile.upsert({
           where: { userId: user.id },
           update: { fullName: user.name || "", email: normalized, avatarUrl: user.image || null },
-          create: { userId: user.id, fullName: user.name || "", email: normalized, avatarUrl: user.image || null, connectCode: `K${crypto.randomUUID().slice(0, 8).toUpperCase()}` },
+          create: { userId: user.id, fullName: user.name || "", email: normalized, avatarUrl: user.image || null },
         });
       }
       return Boolean(account);
@@ -65,7 +75,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role;
+        // Re-read the role: a new Google account may have just been made a coach in events.createUser.
+        const fresh = user.id ? await prisma.user.findUnique({ where: { id: user.id }, select: { role: true } }) : null;
+        token.role = fresh?.role ?? user.role;
       }
       if (token.id && !token.role) {
         const dbUser = await prisma.user.findUnique({ where: { id: String(token.id) }, select: { role: true, email: true } });

@@ -1,17 +1,16 @@
 import Link from "next/link";
 import { requireRole } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db/prisma";
-import { athleteSignals, buildRecommendations, coachRelations, teamDaily, fmtDate } from "@/lib/coach/data";
-import { AthleteCard, Avatar, Empty, PageHead, Stat } from "@/components/coach/CoachUI";
-import RosterActions from "@/components/coach/RosterActions";
+import { athleteSignals, buildRecommendations, teamDaily, fmtDate } from "@/lib/coach/data";
+import { AthleteCard, Empty, PageHead, Stat } from "@/components/coach/CoachUI";
 import { ProgressChart } from "@/components/charts/ProgressCharts";
 
 export const dynamic = "force-dynamic";
 export default async function CoachOverview() {
   const s = await requireRole("coach"); const coachId = s.user.id;
-  const [profile, signals, pending, daily, followUps, sessions, recentInjuries] = await Promise.all([
+  const [profile, signals, pendingPayments, daily, followUps, sessions, recentInjuries] = await Promise.all([
     prisma.profile.findUnique({ where: { userId: coachId }, select: { fullName: true } }),
-    athleteSignals(coachId), coachRelations(coachId, ["pending"]), teamDaily(coachId, 30),
+    athleteSignals(coachId), prisma.paymentRequest.count({ where: { coachId, role: "athlete", status: "pending" } }), teamDaily(coachId, 30),
     prisma.followUp.findMany({ where: { coachId, status: "pending" }, include: { athlete: { select: { name: true, email: true, profile: { select: { fullName: true } } } } }, orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }], take: 5 }),
     prisma.trainingSession.findMany({ where: { coachId, status: "scheduled", scheduledAt: { gte: new Date() } }, orderBy: { scheduledAt: "asc" }, take: 3 }),
     prisma.injury.findMany({ where: { athlete: { athleteRelations: { some: { coachId, status: "active" } } }, status: { in: ["active", "recovering"] } }, include: { athlete: { select: { name: true, email: true, profile: { select: { fullName: true } } } } }, orderBy: { dateReported: "desc" }, take: 5 }),
@@ -23,18 +22,17 @@ export default async function CoachOverview() {
 
   return <div className="stack" style={{ gap: 16 }}>
     <PageHead eyebrow="GYM" title={`Welcome back, ${(profile?.fullName || s.user.name || "Coach").split(" ")[0]}`} sub="Your team at a glance — every number comes from recorded athlete data.">
-      <Link className="btn secondary" href="/coach/follow-ups">+ Follow-up</Link><Link className="btn primary" href="/coach/invites">+ Invite member</Link>
+      <Link className="btn secondary" href="/coach/follow-ups">+ Follow-up</Link><Link className="btn primary" href="/coach/memberships">Subscriptions{pendingPayments ? ` (${pendingPayments})` : ""}</Link>
     </PageHead>
     <div className="statGrid">
       <Stat label="Active athletes" value={active.length} hint={`${signals.length} on roster`} />
-      <Stat label="Pending requests" value={pending.length} warn={pending.length > 0} />
+      <Stat label="Pending payment orders" value={pendingPayments} warn={pendingPayments > 0} hint={pendingPayments ? "Confirm in Subscriptions" : undefined} />
       <Stat label="Avg readiness (7d)" value={readiness.length ? Math.round(readiness.reduce((a, b) => a + b, 0) / readiness.length) : "—"} hint={readiness.length ? `${readiness.length} athlete(s) checked in` : "No check-ins this week"} />
       <Stat label="Blocks completed (7d)" value={active.reduce((s, a) => s + a.completed7, 0)} />
       <Stat label="Active injuries" value={active.reduce((s, a) => s + a.activeInjuries, 0)} warn={active.some((a) => a.activeInjuries)} />
       <Stat label="Need attention" value={recs.filter((r) => r.priority === "high").length} hint={`${recs.length} with open issues`} warn={recs.some((r) => r.priority === "high")} />
     </div>
 
-    {pending.length > 0 && <div className="solid"><h2 className="sectionTitle">Connection requests</h2><div className="rowList" style={{ marginTop: 10 }}>{pending.map((r) => { const n = r.athlete.profile?.fullName || r.athlete.name || r.athlete.email; return <div className="rowItem" key={r.id}><div className="row"><Avatar name={n} src={r.athlete.profile?.avatarUrl} /><div><strong>{n}</strong><div className="small muted">{r.requestedByRole === "athlete" ? "Wants to join your roster" : "You invited them — waiting for their answer"} · {fmtDate(r.createdAt)}</div></div></div>{r.requestedByRole === "athlete" && <RosterActions relationId={r.id} />}</div>; })}</div></div>}
 
     <div className="chartGrid">
       <ProgressChart title="Team readiness" subtitle="Average daily check-in score, active athletes" kind="line" unit="/100" yMin={0} yMax={100} points={daily.map((d) => ({ date: d.date, value: d.readiness }))} empty="No check-ins from your athletes in the last 30 days." />
@@ -53,8 +51,10 @@ export default async function CoachOverview() {
         </div></div>
     </div>
 
+    <div className="rangeRow">{[["/coach/sessions", "Sessions"], ["/coach/follow-ups", "Follow-ups"], ["/coach/injuries", "Injuries"], ["/coach/attendance", "Attendance"], ["/coach/recommendations", "Recommendations"]].map(([href, label]) => <Link key={href} className="rangeBtn" href={href}>{label}</Link>)}</div>
+
     <div><div className="row spread" style={{ marginBottom: 10 }}><h2 className="sectionTitle">Your athletes</h2><Link className="linkBtn" href="/coach/athletes">View all →</Link></div>
-      {signals.length ? <div className="athGrid">{signals.slice(0, 6).map((a) => <AthleteCard key={a.athleteId} a={a} />)}</div> : <Empty>No athletes yet. <Link href="/coach/invites" style={{ color: "var(--orange2)" }}>Invite an athlete</Link> or share your name so they can find you.</Empty>}
+      {signals.length ? <div className="athGrid">{signals.slice(0, 6).map((a) => <AthleteCard key={a.athleteId} a={a} />)}</div> : <Empty>No members yet. Athletes find you by searching your name in their app and choosing you — they connect automatically.</Empty>}
     </div>
   </div>;
 }

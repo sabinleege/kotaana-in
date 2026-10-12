@@ -1,2 +1,30 @@
-import {NextResponse} from 'next/server';import {apiAuth} from '@/lib/auth/guard';import {prisma} from '@/lib/db/prisma';import {z} from 'zod';import {grantAccess} from '@/lib/subscription';const s=z.object({paymentId:z.string().uuid(),approved:z.boolean(),note:z.string().max(500).optional()});export async function POST(req:Request){const a=await apiAuth('admin','coach');if('error'in a)return a.error;const p=s.safeParse(await req.json().catch(()=>null));if(!p.success)return NextResponse.json({error:'Invalid payment approval.'},{status:400});const row=await prisma.paymentRequest.findUnique({where:{id:p.data.paymentId}});if(!row)return NextResponse.json({error:'Payment not found.'},{status:404});if(a.session.user.role==='coach'){if(row.role!=='athlete'||row.coachId!==a.session.user.id)return NextResponse.json({error:'Payment is not addressed to this coach.'},{status:403});const rel=await prisma.coachAthleteRelation.findFirst({where:{coachId:a.session.user.id,athleteId:row.userId,status:{in:['pending','active']}}});if(!rel)return NextResponse.json({error:'Payment requires an athlete connection before approval.'},{status:403})}const updated=await prisma.paymentRequest.update({where:{id:row.id},data:{status:p.data.approved?'approved':'rejected',approvedById:a.session.user.id,note:p.data.note||null}});if(p.data.approved){const gym=row.planType==='coach_service';await grantAccess({userId:row.userId,source:gym?'gym':'direct',grantedById:a.session.user.id,planType:gym?'gym_member':row.planType});}
-await prisma.notification.create({data:{userId:row.userId,title:p.data.approved?'Payment approved':'Payment rejected',message:`Your Kotaana payment request was ${p.data.approved?'approved — access is active for 30 days':'rejected'}.`,type:'payment'}});return NextResponse.json({ok:true,payment:updated});}
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { apiAuth } from "@/lib/auth/guard";
+import { prisma } from "@/lib/db/prisma";
+import { grantAccess, revokeAccess } from "@/lib/subscription";
+
+const schema = z.object({ paymentId: z.string().uuid(), approved: z.boolean(), block: z.boolean().optional(), note: z.string().max(500).optional() });
+
+/** The coach who owns the order (or an admin) confirms a payment: approving unlocks 30 days, rejecting leaves access as it was, and blocking rejects the order and switches the member's access off. */
+export async function POST(req: Request) {
+  const a = await apiAuth("admin", "coach"); if ("error" in a) return a.error;
+  const p = schema.safeParse(await req.json().catch(() => null));
+  if (!p.success) return NextResponse.json({ error: "Invalid payment decision." }, { status: 400 });
+  const row = await prisma.paymentRequest.findUnique({ where: { id: p.data.paymentId } });
+  if (!row) return NextResponse.json({ error: "Payment not found." }, { status: 404 });
+  if (row.status !== "pending") return NextResponse.json({ error: "This payment was already answered." }, { status: 409 });
+  const isCoach = a.session.user.role === "coach";
+  if (isCoach) {
+    if (row.role !== "athlete" || row.coachId !== a.session.user.id) return NextResponse.json({ error: "Payment is not addressed to this coach." }, { status: 403 });
+    const rel = await prisma.coachAthleteRelation.findFirst({ where: { coachId: a.session.user.id, athleteId: row.userId, status: { in: ["active", "paused"] } } });
+    if (!rel) return NextResponse.json({ error: "This member is no longer connected to you." }, { status: 403 });
+  }
+  const block = Boolean(p.data.block) && !p.data.approved;
+  const updated = await prisma.paymentRequest.update({ where: { id: row.id }, data: { status: p.data.approved ? "approved" : "rejected", approvedById: a.session.user.id, note: p.data.note || (block ? "Rejected — access blocked" : null) } });
+  const gym = row.planType === "coach_service";
+  if (p.data.approved) await grantAccess({ userId: row.userId, source: gym ? "gym" : "direct", grantedById: a.session.user.id, planType: gym ? "gym_member" : row.planType });
+  if (block) await revokeAccess(row.userId);
+  await prisma.notification.create({ data: { userId: row.userId, title: p.data.approved ? "Payment confirmed" : block ? "Access blocked" : "Payment rejected", message: p.data.approved ? "Your payment was confirmed — access is active for 30 days." : block ? "Your payment could not be confirmed and your access was turned off. Contact your coach." : "Your payment could not be confirmed. Check the details and try again.", type: "payment" } });
+  return NextResponse.json({ ok: true, payment: updated });
+}

@@ -8,5 +8,12 @@ export async function POST(req:Request){
  const row=await prisma.exercisePerformance.create({data:{userId:a.session.user.id,date:today,exerciseId:p.data.exerciseId,exerciseName:p.data.exerciseName||move.name,setsDone:p.data.setsDone,repsDone:p.data.repsDone,durationSec:p.data.durationSec,effort:p.data.effort,completed:p.data.completed,notes:p.data.notes}});
  const prior=Array.isArray(plan.completedExercises)?plan.completedExercises.map(String):[];const next=p.data.completed&&!prior.includes(p.data.exerciseId)?[...prior,p.data.exerciseId]:prior;const actionable=moves.filter((m:any)=>m.role!=="hydration").length;const completionRate=actionable?Math.min(1,next.length/actionable):0;
  await prisma.$transaction([prisma.workoutPlan.update({where:{id:plan.id},data:{completedExercises:next}}),prisma.workoutLog.upsert({where:{userId_date:{userId:a.session.user.id,date:today}},create:{userId:a.session.user.id,date:today,planId:plan.id,completionRate},update:{planId:plan.id,completionRate,notes:p.data.notes}}),prisma.profile.update({where:{userId:a.session.user.id},data:{lastActiveAt:new Date()}})]);
+ if(p.data.completed){
+  // Rough energy estimate (moderate resistance training ≈ 5 MET) so the dashboard can chart calories burned from finished blocks.
+  const w=(await prisma.profile.findUnique({where:{userId:a.session.user.id},select:{weight:true}}))?.weight||70;
+  const sec=p.data.durationSec||Math.max(60,(p.data.setsDone||move.sets||2)*50);
+  const kcal=Math.max(1,Math.round(5*w*(sec/3600)));
+  await prisma.activityData.upsert({where:{userId_date:{userId:a.session.user.id,date:today}},create:{userId:a.session.user.id,date:today,day:today.toLocaleDateString("en-US",{weekday:"short",timeZone:"UTC"}),calories:kcal},update:{calories:{increment:kcal}}});
+ }
  return NextResponse.json({ok:true,performance:row,completionRate});
 }

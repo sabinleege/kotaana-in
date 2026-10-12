@@ -1,21 +1,21 @@
 "use client";
 import {useEffect,useState} from 'react';
 
-type Theme = 'system'|'dark'|'light';
+type Theme = 'dark'|'light';
 
 function applyTheme(theme:Theme){
   document.documentElement.dataset.theme=theme;
-  document.documentElement.style.colorScheme=theme==='light'?'light':theme==='dark'?'dark':'light dark';
+  document.documentElement.style.colorScheme=theme;
   try{localStorage.setItem('kotaana-theme',theme)}catch{}
 }
 
 export default function AppearanceScreen(){
-  const [theme,setTheme]=useState<Theme>('system');
+  const [theme,setTheme]=useState<Theme>('light');
   const [busy,setBusy]=useState(false);
 
   useEffect(()=>{
     fetch('/api/profile').then(r=>r.json()).then(d=>{
-      const v:Theme=d.profile?.theme==='light'||d.profile?.theme==='dark'||d.profile?.theme==='system'?d.profile.theme:'system';
+      const v:Theme=d.profile?.theme==='dark'?'dark':'light'; // an old saved "system" choice now means Light
       setTheme(v); applyTheme(v);
     }).catch(()=>{});
   },[]);
@@ -37,10 +37,10 @@ export default function AppearanceScreen(){
     </div>
     <div className="card">
       <div className="list">
-        {(['system','dark','light'] as const).map(v=><button key={v} className={`item themeOption ${theme===v?'selected':''}`} disabled={busy} onClick={()=>save(v)} style={{color:'inherit',textAlign:'left'}}>
+        {(['light','dark'] as const).map(v=><button key={v} className={`item themeOption ${theme===v?'selected':''}`} disabled={busy} onClick={()=>save(v)} style={{color:'inherit',textAlign:'left'}}>
           <span>
             <strong>{v[0].toUpperCase()+v.slice(1)}</strong>
-            <small className="small muted">{v==='light'?'Bright, clean interface':v==='dark'?'Dark interface':'Follow your device preference'}</small>
+            <small className="small muted">{v==='light'?'Bright, clean interface':'Dark interface'}</small>
           </span>
           <span className="pill">{theme===v?'Selected':'Select'}</span>
         </button>)}
