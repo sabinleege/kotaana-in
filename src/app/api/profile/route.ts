@@ -20,6 +20,7 @@ const schema=z.object({
  trainingDays:z.array(z.number().int().min(0).max(6)).max(7).optional(),
  outdoorTrainingOk:z.boolean().optional(),
  workoutIntensity:z.enum(["easy","moderate","hard"]).nullable().optional(),
+ organizationType:z.enum(["coach","gym","club"]).optional(),
  primaryGoal:z.string().max(50).nullable().optional(),
  track:z.string().max(50).nullable().optional(),
  level:z.enum(["beginner","intermediate","advanced"]).nullable().optional(),

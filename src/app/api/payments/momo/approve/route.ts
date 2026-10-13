@@ -3,6 +3,7 @@ import { z } from "zod";
 import { apiAuth } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db/prisma";
 import { grantAccess, revokeAccess } from "@/lib/subscription";
+import { parseCapacityPlan } from "@/lib/coach/capacity";
 
 const schema = z.object({ paymentId: z.string().uuid(), approved: z.boolean(), block: z.boolean().optional(), note: z.string().max(500).optional() });
 
@@ -23,8 +24,10 @@ export async function POST(req: Request) {
   const block = Boolean(p.data.block) && !p.data.approved;
   const updated = await prisma.paymentRequest.update({ where: { id: row.id }, data: { status: p.data.approved ? "approved" : "rejected", approvedById: a.session.user.id, note: p.data.note || (block ? "Rejected — access blocked" : null) } });
   const gym = row.planType === "coach_service";
-  if (p.data.approved) await grantAccess({ userId: row.userId, source: gym ? "gym" : "direct", grantedById: a.session.user.id, planType: gym ? "gym_member" : row.planType });
-  if (block) await revokeAccess(row.userId);
-  await prisma.notification.create({ data: { userId: row.userId, title: p.data.approved ? "Payment confirmed" : block ? "Access blocked" : "Payment rejected", message: p.data.approved ? "Your payment was confirmed — access is active for 30 days." : block ? "Your payment could not be confirmed and your access was turned off. Contact your coach." : "Your payment could not be confirmed. Check the details and try again.", type: "payment" } });
+  const capacityTier = parseCapacityPlan(row.planType);
+  if (p.data.approved && capacityTier) await prisma.profile.update({ where: { userId: row.userId }, data: { memberCapacity: capacityTier, capacityUntil: new Date(Date.now() + 30 * 86400000) } });
+  else if (p.data.approved) await grantAccess({ userId: row.userId, source: gym ? "gym" : "direct", grantedById: a.session.user.id, planType: gym ? "gym_member" : row.planType });
+  if (block && !capacityTier) await revokeAccess(row.userId);
+  await prisma.notification.create({ data: { userId: row.userId, title: p.data.approved ? "Payment confirmed" : block ? "Access blocked" : "Payment rejected", message: p.data.approved ? (capacityTier ? `Your upgrade was confirmed — you can now look after up to ${capacityTier} members for 30 days.` : "Your payment was confirmed — access is active for 30 days.") : block ? "Your payment could not be confirmed and your access was turned off. Contact your coach." : "Your payment could not be confirmed. Check the details and try again.", type: "payment" } });
   return NextResponse.json({ ok: true, payment: updated });
 }

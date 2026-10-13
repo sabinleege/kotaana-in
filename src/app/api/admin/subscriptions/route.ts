@@ -7,7 +7,8 @@ import { MAX_ACCESS_DAYS, grantAccess, revokeAccess } from "@/lib/subscription";
 const grant = z.object({ action: z.literal("grant"), userId: z.string().uuid(), days: z.number().int().min(1).max(MAX_ACCESS_DAYS).default(MAX_ACCESS_DAYS) });
 const revoke = z.object({ action: z.literal("revoke"), userId: z.string().uuid() });
 const price = z.object({ action: z.literal("price"), usd: z.number().positive().max(1000), rate: z.number().positive().max(100000) });
-const body = z.discriminatedUnion("action", [grant, revoke, price]);
+const paywall = z.object({ action: z.literal("paywall"), enabled: z.boolean(), trialDays: z.number().int().min(0).max(60) });
+const body = z.discriminatedUnion("action", [grant, revoke, price, paywall]);
 
 /** Admin has total control: grant (max 30 days), revoke, and set the price. */
 export async function POST(req: Request) {
@@ -18,6 +19,11 @@ export async function POST(req: Request) {
     await prisma.$transaction([
       prisma.appConfig.upsert({ where: { key: "price_usd" }, create: { key: "price_usd", value: String(p.data.usd) }, update: { value: String(p.data.usd) } }),
       prisma.appConfig.upsert({ where: { key: "usd_to_rwf" }, create: { key: "usd_to_rwf", value: String(p.data.rate) }, update: { value: String(p.data.rate) } }),
+    ]);
+  } else if (p.data.action === "paywall") {
+    await prisma.$transaction([
+      prisma.appConfig.upsert({ where: { key: "paywall_enabled" }, create: { key: "paywall_enabled", value: String(p.data.enabled) }, update: { value: String(p.data.enabled) } }),
+      prisma.appConfig.upsert({ where: { key: "trial_days" }, create: { key: "trial_days", value: String(p.data.trialDays) }, update: { value: String(p.data.trialDays) } }),
     ]);
   } else if (p.data.action === "grant") {
     await grantAccess({ userId: p.data.userId, source: "admin", grantedById: a.session.user.id, days: p.data.days, planType: "admin_grant" });

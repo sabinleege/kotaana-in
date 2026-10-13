@@ -8,6 +8,10 @@ export type MealPlanContext = {
   healthNotes: string[]; avoidFoods: RegExp[];
   goal?: string | null; targets: { calories: number; protein: number; carbs: number; fat: number };
   mealsPerDay: number; trainsToday: boolean; dayKey: string;
+  /** Foods this person has been logging again and again — used when they are available. */
+  favorites?: string[];
+  /** Age in years when under 18, so the plan stays growth-friendly. */
+  childAge?: number | null;
 };
 
 const SYSTEM = "You are a registered-dietitian style meal planner inside the Kotaana fitness app. Plan one day of real, affordable food that people in the stated region can actually buy and cook, using local staples and dishes where the region is known. Respect every allergy, dietary style and health note. Give honest calorie and macro estimates. Reply with JSON only. Never give medical diagnoses.";
@@ -31,6 +35,10 @@ export async function aiDailyFoodPlan(ctx: MealPlanContext): Promise<{ meals: Pl
     allergies: ctx.allergies,
     culturalOrReligiousRestrictions: ctx.culturalRestrictions || null,
     healthNotes: ctx.healthNotes,
+    foodsThisPersonOftenEats: ctx.favorites?.length ? ctx.favorites : undefined,
+    fruit: "Include fruit in one or two of the day's meals or snacks (not in every meal), using fruit that is common and in season where the person lives.",
+    favouritesRule: ctx.favorites?.length ? "Use some of foodsThisPersonOftenEats where they suit the targets, but keep the day varied." : undefined,
+    growingChild: ctx.childAge != null ? `This is a growing ${ctx.childAge >= 13 ? "teenager" : "child"} aged ${ctx.childAge}. Do NOT restrict calories, do not use diet or low-fat products, never give weight-loss advice, and include milk/dairy or alternatives plus iron- and calcium-rich foods.` : undefined,
   });
   const raw = await aiText(prompt, { system: SYSTEM, temperature: 0.6 }).catch(() => null);
   if (!raw) return null;

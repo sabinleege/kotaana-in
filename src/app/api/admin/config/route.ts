@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiAuth } from "@/lib/auth/guard";
+import { prisma } from "@/lib/db/prisma";
 
 const ITEMS: { key: string; label: string; needed: string; vars: string[] }[] = [
   { key: "auth", label: "Sign-in secret & site URL", needed: "Required", vars: ["AUTH_SECRET", "AUTH_URL"] },
@@ -14,5 +15,7 @@ const ITEMS: { key: string; label: string; needed: string; vars: string[] }[] = 
 /** Which settings are in place — names and yes/no only, never the values. */
 export async function GET() {
   const a = await apiAuth("admin"); if ("error" in a) return a.error;
-  return NextResponse.json({ items: ITEMS.map((i) => ({ label: i.label, needed: i.needed, ok: i.vars.every((v) => Boolean(process.env[v])), missing: i.vars.filter((v) => !process.env[v]) })) });
+  const rows = await prisma.appConfig.findMany({ where: { key: { in: ["paywall_enabled", "trial_days"] } } });
+  const trial = Number(rows.find((r) => r.key === "trial_days")?.value);
+  return NextResponse.json({ paywall: { enabled: rows.find((r) => r.key === "paywall_enabled")?.value !== "false", trialDays: Number.isFinite(trial) && trial >= 0 ? trial : 7 }, items: ITEMS.map((i) => ({ label: i.label, needed: i.needed, ok: i.vars.every((v) => Boolean(process.env[v])), missing: i.vars.filter((v) => !process.env[v]) })) });
 }

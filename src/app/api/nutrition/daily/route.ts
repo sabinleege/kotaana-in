@@ -7,6 +7,10 @@ import { buildDailyFoodPlan, type DailyFoodPlan } from "@/lib/nutrition/engine";
 import { aiDailyFoodPlan } from "@/lib/ai/meal-plan";
 import { nutritionTargets } from "@/lib/health/targets";
 import { activeRules } from "@/lib/health/conditions";
+import { paywallResponse } from "@/lib/access";
+import { takeUsage } from "@/lib/usage";
+import { favoriteFoods } from "@/lib/nutrition/preferences";
+import { isChild } from "@/lib/health/targets";
 
 const dateOnly = (d: Date) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 const loadProfile = (userId: string) => prisma.profile.findUnique({ where: { userId } });
@@ -19,7 +23,9 @@ async function generate(userId: string, profile: Profile, today: Date): Promise<
   const conditions = Array.isArray(profile.healthConditions) ? profile.healthConditions.map(String) : [];
   const targets = nutritionTargets(profile) ?? { calories: 2200, protein: 130, carbs: 260, fat: 70 };
   const weather = profile.locationLat != null && profile.locationLng != null ? await fetchWeather(profile.locationLat, profile.locationLng) : null;
-  const common = { userId, goal: profile.primaryGoal, dietaryStyle: profile.dietaryStyle, allergies: profile.allergies, conditions, isPregnant: profile.isPregnant, targetCalories: targets.calories, location: { city: profile.locationCity, country: profile.locationCountry }, weather };
+  const favorites = await favoriteFoods(userId);
+  const child = isChild(profile.age);
+  const common = { userId, favorites, goal: profile.primaryGoal, dietaryStyle: profile.dietaryStyle, allergies: profile.allergies, conditions, isPregnant: profile.isPregnant, targetCalories: targets.calories, location: { city: profile.locationCity, country: profile.locationCountry }, weather };
 
   // The library plan supplies hydration, health notes and the fallback meals; the AI model only replaces the meals.
   let base: DailyFoodPlan | null = null;
@@ -35,7 +41,7 @@ async function generate(userId: string, profile: Profile, today: Date): Promise<
     country: profile.locationCountry, city: profile.locationCity, climate: temp == null ? "unknown" : temp >= 28 ? "hot" : temp <= 12 ? "cold" : "mild",
     dietaryStyle: profile.dietaryStyle, allergies: profile.allergies, culturalRestrictions: profile.culturalRestrictions,
     healthNotes: [...new Set(rules.map((r) => r.nutritionNote).filter(Boolean) as string[])], avoidFoods: rules.map((r) => r.avoidFoods).filter(Boolean) as RegExp[],
-    goal: profile.primaryGoal, targets, mealsPerDay: profile.mealsPerDay ?? 3, trainsToday, dayKey: today.toISOString().slice(0, 10),
+    goal: profile.primaryGoal, favorites, childAge: child ? profile.age : null, targets, mealsPerDay: profile.mealsPerDay ?? 3, trainsToday, dayKey: today.toISOString().slice(0, 10),
   }).catch((e) => { logError("api_error", e, { where: "nutrition_ai" }); return null; });
 
   if (!ai && !base) throw new Error("No usable foods for the current preferences.");
@@ -45,7 +51,7 @@ async function generate(userId: string, profile: Profile, today: Date): Promise<
     locationLabel: base?.locationLabel ?? ([profile.locationCity, profile.locationCountry].filter(Boolean).join(", ") || "Location not set"),
     weatherNote: base?.weatherNote ?? "Weather unavailable.",
     hydration: base?.hydration ?? { mlTarget: water, glassesTarget: Math.ceil(water / 300), workoutBreakMl: 500, tips: ["Drink 500 ml between workout blocks."] },
-    healthNotes: base?.healthNotes ?? [],
+    healthNotes: [...(base?.healthNotes ?? []), ...(child ? ["Growing body: calories are not restricted and meals include dairy and iron-rich foods."] : [])],
     meals: ai ? ai.meals : base!.meals,
     source: ai ? "ai" : "library",
     targets,
@@ -77,6 +83,12 @@ async function respond(userId: string, force: boolean) {
   }
 }
 
-export async function GET() { const a = await apiAuth("athlete"); if ("error" in a) return a.error; return respond(a.session.user.id, false); }
+export async function GET() { const a = await apiAuth("athlete"); if ("error" in a) return a.error; const blocked = await paywallResponse(a.session.user.id, a.session.user.role); if (blocked) return blocked; return respond(a.session.user.id, false); }
 /** Builds a fresh plan for today on request. */
-export async function POST() { const a = await apiAuth("athlete"); if ("error" in a) return a.error; return respond(a.session.user.id, true); }
+export async function POST() {
+  const a = await apiAuth("athlete"); if ("error" in a) return a.error;
+  const blocked = await paywallResponse(a.session.user.id, a.session.user.role); if (blocked) return blocked;
+  const cap = await takeUsage(a.session.user.id, "nutrition_plan");
+  if (!cap.ok) return NextResponse.json({ ok: false, code: "DAILY_LIMIT", error: `You've rebuilt your meal plan ${cap.limit} times today — that's the daily limit. Today's plan stays available.` }, { status: 429 });
+  return respond(a.session.user.id, true);
+}

@@ -15,6 +15,7 @@ function AuthInner({ googleEnabled }: { googleEnabled: boolean }) {
   const params = useSearchParams();
   const [mode, setMode] = useState<"login" | "signup">(params.get("mode") === "signup" ? "signup" : "login");
   const [role, setRole] = useState<"" | "athlete" | "coach">("");
+  const [org, setOrg] = useState<"coach" | "gym" | "club">("coach");
   const [name, setName] = useState(""); const [dob, setDob] = useState(""); const [gender, setGender] = useState<Gender>("");
   const [email, setEmail] = useState(""); const [password, setPassword] = useState(""); const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -27,7 +28,7 @@ function AuthInner({ googleEnabled }: { googleEnabled: boolean }) {
     try {
       if (signup) {
         if (!role) throw new Error("Please select your role.");
-        const r = await fetch("/api/auth/signup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, email, password, role, dateOfBirth: dob, gender: gender || undefined }) });
+        const r = await fetch("/api/auth/signup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, email, password, role, dateOfBirth: dob, gender: gender || undefined, organizationType: role === "coach" ? org : undefined }) });
         const d = await r.json(); if (!r.ok) throw new Error(d.error || "Signup failed");
       }
       const result = await signIn("credentials", { email, password, redirect: false });
@@ -54,7 +55,8 @@ function AuthInner({ googleEnabled }: { googleEnabled: boolean }) {
     <p className="ktSub">{signup ? "Join Kotaana and start your fitness journey today!" : "Log in to continue your training."}</p>
     <form onSubmit={submit} className="ktForm" noValidate={false}>
       {signup && <label className="ktField"><Icon name="user" /><input aria-label="Full name" placeholder="Full Name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} required minLength={2} /></label>}
-      {signup && <label className="ktField two"><Icon name="briefcase" /><span className="ktStack"><small>Role</small><select aria-label="Role" value={role} onChange={(e) => setRole(e.target.value as "" | "athlete" | "coach")} required className={role ? "" : "empty"}><option value="" disabled>Select your role</option><option value="athlete">Athlete</option><option value="coach">Coach / Gym</option></select></span><Icon name="chevron" size={18} /></label>}
+      {signup && <label className="ktField two"><Icon name="briefcase" /><span className="ktStack"><small>Role</small><select aria-label="Role" value={role} onChange={(e) => setRole(e.target.value as "" | "athlete" | "coach")} required className={role ? "" : "empty"}><option value="" disabled>Select your role</option><option value="athlete">Athlete</option><option value="coach">Coach / Gym / Sports club</option></select></span><Icon name="chevron" size={18} /></label>}
+      {signup && role === "coach" && <label className="ktField two"><Icon name="briefcase" /><span className="ktStack"><small>You are registering as</small><select aria-label="Organisation type" value={org} onChange={(e) => setOrg(e.target.value as "coach" | "gym" | "club")}><option value="coach">An individual coach</option><option value="gym">A gym</option><option value="club">A sports club / team</option></select></span><Icon name="chevron" size={18} /></label>}
       <label className="ktField"><Icon name="mail" /><input aria-label="Email address" type="email" placeholder="Email Address" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>
       <label className="ktField"><Icon name="lock" /><input aria-label="Password" type={show ? "text" : "password"} placeholder="Password" autoComplete={signup ? "new-password" : "current-password"} minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} required />
         <button type="button" className="ktEye" onClick={() => setShow(!show)} aria-label={show ? "Hide password" : "Show password"}><Icon name={show ? "eyeoff" : "eye"} size={22} /></button></label>

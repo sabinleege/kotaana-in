@@ -170,3 +170,13 @@ html[data-theme="light"] .side{border-color:var(--border)}
 .sliderRow{margin-bottom:14px}.sliderRow label{font-weight:600}.sliderRow input[type=range]{width:100%;margin:10px 0 0;accent-color:var(--orange)}.sleepInput{width:96px;text-align:center;font-weight:700}
 .segRow{display:flex;flex-wrap:wrap;gap:8px}.seg{flex:1 1 90px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:11px 12px;border:1px solid var(--border);border-radius:12px;background:var(--card2);color:var(--text);font-weight:700;font-size:14px}.seg small{font-size:11px;font-weight:500;color:var(--muted)}.seg.sel{border-color:var(--orange);background:rgba(255,107,0,.12)}
 .nutriHero{background:linear-gradient(180deg,rgba(255,107,0,.1),var(--card) 60%)}.mealCard.logged{border-color:rgba(255,107,0,.35)}.mealIcon{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:13px;background:rgba(255,107,0,.12);font-size:21px}
+
+/* Check-in situation cards, photo picker, fitness status and workout session extras. */
+.questionPair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.photoThumb{width:84px;height:84px;object-fit:cover;border-radius:12px;border:1px solid var(--border)}
+.fitCard{border-left:4px solid var(--ok)}.fitCard.light{border-left-color:var(--orange)}.fitCard.rest{border-left-color:var(--danger)}
+.moveDone{opacity:.8;border-color:rgba(255,107,0,.35)}.cueSelect{width:auto;padding:7px 10px;font-size:12px}
+.statusCard{display:flex;align-items:center;gap:14px}.statusDot{flex:0 0 14px;width:14px;height:14px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 5px rgba(54,211,153,.18)}.statusDot.light{background:var(--orange);box-shadow:0 0 0 5px rgba(255,107,0,.18)}.statusDot.rest{background:var(--danger);box-shadow:0 0 0 5px rgba(239,68,68,.18)}
+.healCard .barTrack{margin:6px 0}.communityBanner{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid rgba(255,107,0,.35);border-radius:14px;background:rgba(255,107,0,.08);font-weight:700;font-size:14px}
+.reviewList{margin:6px 0 0;padding-left:18px;font-size:13px;line-height:1.5}.reviewList li{margin:2px 0}
+.noteRow{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:12px;background:var(--card2);font-size:13px}.noteRow.unread{border-left:3px solid var(--orange)}

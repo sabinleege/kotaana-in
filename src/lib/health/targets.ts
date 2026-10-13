@@ -19,7 +19,20 @@ export type NutritionTargets = { calories: number; protein: number; carbs: numbe
 type P = { weight?: number | null; height?: number | null; age?: number | null; gender?: string | null; targetCalories?: number | null; primaryGoal?: string | null; trainingDaysPerWeek?: number | null };
 
 /** Daily calories and macros: the athlete's own calorie target when set, otherwise Mifflin-St Jeor with a training-days activity factor and a goal adjustment. */
+export const isChild = (age?: number | null) => age != null && age < 18;
+
+/** Children and teenagers are growing: no weight-loss deficit, no adult goal adjustment, and a floor on calories. */
+function childTargets(p: P): NutritionTargets {
+  const age = p.age ?? 12;
+  const base = age <= 8 ? 1600 : age <= 13 ? (p.gender === "male" ? 2200 : 1950) : p.gender === "male" ? 2600 : p.gender === "female" ? 2200 : 2400;
+  const calories = Math.max(1400, Math.min(3200, p.targetCalories ?? base));
+  const protein = Math.round((p.weight ?? age * 3.2 + 7) * 1.0);
+  const fat = Math.round((calories * 0.3) / 9);
+  return { calories, protein, carbs: Math.max(0, Math.round((calories - protein * 4 - fat * 9) / 4)), fat };
+}
+
 export function nutritionTargets(p: P): NutritionTargets | null {
+  if (isChild(p.age)) return childTargets(p);
   let calories = p.targetCalories ?? null;
   if (!calories) {
     if (!p.weight || !p.height || !p.age) return null;

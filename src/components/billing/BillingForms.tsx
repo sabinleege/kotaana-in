@@ -65,3 +65,26 @@ export function CoachPayPanel({ coachId, coachName, priceRwf, momoNumber, momoNa
     {msg && <p className={`small ${msg.ok ? "success" : "danger"}`} style={{ margin: 0 }}>{msg.text}</p>}
   </div>;
 }
+
+/** A coach, gym or club paying for room for more than 70 members. Kotaana confirms the payment, then the new limit lasts 30 days. */
+export function CapacityPanel({ max, usd, rwf, code, pending }: { max: number; usd: number; rwf: number; code: string | null; pending: boolean }) {
+  const router = useRouter();
+  const [f, setF] = useState({ number: "", name: "" });
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const submit = async () => {
+    setBusy(true); setMsg(null);
+    const r = await fetch("/api/payments/momo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ payerNumber: f.number, payerName: f.name.trim(), planType: "coach_capacity_" + max, idempotencyKey: crypto.randomUUID() }) }).catch(() => null);
+    const d = r ? await r.json().catch(() => ({})) : {};
+    setBusy(false); setMsg(r?.ok ? { ok: true, text: d.message || "Upgrade order sent." } : { ok: false, text: d.error || "Could not send the order." });
+    if (r?.ok) router.refresh();
+  };
+  if (pending) return <div><span className="prio normal">upgrade pending</span><p style={{ margin: "8px 0 0" }}>Your upgrade payment is waiting for confirmation by Kotaana.</p></div>;
+  if (!code) return <p className="small muted" style={{ margin: 0 }}>Kotaana has not published its MoMo payment code yet, so upgrades can't be recorded. Please try again later.</p>;
+  return <div className="stack" style={{ gap: 12 }}>
+    <ol className="howSteps"><li>Send <strong>{rwf.toLocaleString()} RWF</strong> (about ${usd}) by MoMo to code <code className="inviteCode">{code}</code> for room for <strong>{max} members</strong> for 30 days.</li><li>Enter the number and name you paid from.</li><li>Kotaana confirms it and your limit rises.</li></ol>
+    <div className="formGrid"><div><label className="label">Your MoMo number</label><input className="input" inputMode="tel" placeholder="07XXXXXXXX" value={f.number} onChange={(e) => setF({ ...f, number: e.target.value })} /></div><div><label className="label">Name on the MoMo account</label><input className="input" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></div></div>
+    <div><button className="btn primary" disabled={busy || f.number.replace(/\D/g, "").length < 9 || f.name.trim().length < 2} onClick={submit}>{busy ? "Sending…" : "I paid " + rwf.toLocaleString() + " RWF for " + max + " members"}</button></div>
+    {msg && <p className={"small " + (msg.ok ? "success" : "danger")} style={{ margin: 0 }}>{msg.text}</p>}
+  </div>;
+}

@@ -48,6 +48,10 @@ model User {
   paymentRequests PaymentRequest[]
   exercisePerformances ExercisePerformance[]
   nutritionPlans NutritionPlan[]
+  usageCounters UsageCounter[]
+  healthUpdates HealthUpdate[]
+  athleteReports AthleteReport[]
+  questionnaires Questionnaire[]
 
   coachRelations CoachAthleteRelation[] @relation("CoachRelations")
   athleteRelations CoachAthleteRelation[] @relation("AthleteRelations")
@@ -176,6 +180,9 @@ model Profile {
   onboardingCompleted Boolean @default(false)
   membershipPriceRwf Int?
   workoutIntensity String?
+  organizationType String?
+  memberCapacity Int @default(70)
+  capacityUntil DateTime?
   momoNumber String?
   momoName String?
 
@@ -294,6 +301,11 @@ model WorkoutLog {
   planId String?
   completionRate Float @default(0)
   notes String?
+  rpe Int?
+  feltAfter String?
+  painReported Boolean @default(false)
+  startedAt DateTime?
+  finishedAt DateTime?
   createdAt DateTime @default(now())
   @@unique([userId, date])
   @@map("workout_logs")
@@ -350,6 +362,13 @@ model Injury {
   healingPercent Int? @default(0)
   recoveryTimeline Json?
   attachmentUrl String?
+  kind String @default("injury")
+  onMedication Boolean @default(false)
+  doctorPrescribed Boolean @default(false)
+  doctorDays Int?
+  estimatedDays Int?
+  estimateSource String?
+  nextFollowUpAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([athleteId, status])
@@ -665,4 +684,66 @@ model NutritionPlan {
   createdAt DateTime @default(now())
   @@unique([userId, date])
   @@map("nutrition_plans")
+}
+
+/// Per-day counters for fair-use limits (meal photos, workout builds, plan rebuilds). Other data collection is not limited.
+model UsageCounter {
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind String
+  date DateTime @db.Date
+  count Int @default(0)
+  @@unique([userId, kind, date])
+  @@map("usage_counters")
+}
+
+/// A follow-up on an injury, illness or pregnancy: how it feels, how it is healing, and an optional photo.
+model HealthUpdate {
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  injuryId String?
+  kind String
+  trend String?
+  pain Int?
+  healingPercent Int?
+  imageUrl String? @db.Text
+  aiNote String? @db.Text
+  answers Json?
+  createdAt DateTime @default(now())
+  @@index([userId, createdAt])
+  @@index([injuryId])
+  @@map("health_updates")
+}
+
+/// A periodic review written by the larger model from the athlete's recorded data (every 3-7 days) and monthly.
+model AthleteReport {
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind String
+  periodStart DateTime @db.Date
+  periodEnd DateTime @db.Date
+  summary String @db.Text
+  wins Json @default("[]")
+  concerns Json @default("[]")
+  suggestions Json @default("[]")
+  metrics Json?
+  source String @default("rules")
+  createdAt DateTime @default(now())
+  @@index([userId, createdAt])
+  @@map("athlete_reports")
+}
+
+/// Weekly situation and monthly data-improvement answers.
+model Questionnaire {
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind String
+  answers Json
+  createdAt DateTime @default(now())
+  @@index([userId, kind, createdAt])
+  @@map("questionnaires")
 }

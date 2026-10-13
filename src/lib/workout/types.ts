@@ -61,6 +61,12 @@ export type UserWorkoutContext = {
   weeklyMuscleTags?: string[];
   weeklyMovementPatterns?: string[];
   missedSessions?: number;
+  /** Extra words to keep out of today's session (for example lying-flat moves in late pregnancy). */
+  extraAvoid?: string[];
+  /** Extra lines shown under "Adjusted for your health profile". */
+  extraNotes?: string[];
+  /** Lowest allowed effort for the day (for example "easy" when the athlete is unwell). */
+  effortCap?: "easy" | "moderate" | "hard";
 };
 
 export type SessionMove = {
@@ -75,6 +81,8 @@ export type SessionMove = {
   effort?: "easy" | "moderate" | "hard";
   estimatedMin?: number;
   notes?: string;
+  /** Set when a recent exercise is repeated on purpose with a different format (tempo, pause reps…). */
+  format?: string;
   gif?: string | null;
   image?: string | null;
 };

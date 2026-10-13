@@ -24,7 +24,7 @@ export default function PaymentApprovals({ rows, back, title = "Payment approval
     <div className="rowList">{rows.map((x) => <div className="solid" key={x.id}>
       <div className="row spread" style={{ flexWrap: "wrap", alignItems: "flex-start" }}>
         <div><div className="row" style={{ gap: 8 }}><strong style={{ fontSize: 16 }}>{x.user?.name || x.user?.email || "Member"}</strong><span className="prio normal">pending</span></div>
-          <div className="small muted" style={{ marginTop: 4 }}>{PLAN[x.planType] || x.planType} · {new Date(x.createdAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</div>
+          <div className="small muted" style={{ marginTop: 4 }}>{x.planType.startsWith("coach_capacity_") ? `Member capacity — up to ${x.planType.split("_")[2]} members` : PLAN[x.planType] || x.planType} · {new Date(x.createdAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</div>
           <div className="small" style={{ marginTop: 6 }}>From <strong>{x.payerName}</strong> · {x.payerNumber}</div></div>
         <div style={{ textAlign: "right" }}><div style={{ fontSize: 22, fontWeight: 900 }}>{x.amount.toLocaleString()} <span className="small muted">{x.currency}</span></div><div className="small muted">approving gives 30 days</div></div>
       </div>

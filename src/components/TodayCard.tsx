@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-type W = { session: { estimatedMinutes: number; moves: { role: string; name: string }[] } | null; error?: string; auto?: string };
+type W = { session: { estimatedMinutes: number; moves: { role: string; name: string }[] } | null; error?: string; stale?: boolean; needsCheckin?: boolean; rest?: boolean; fitness?: { detail: string } };
 type Meal = { slot: string; name: string; calories: number; protein: number; foods: { name: string }[] };
 type N = { ok: boolean; error?: string; plan?: { meals: Meal[]; hydration: { mlTarget: number }; summary: string; targets?: { calories: number } }; log?: { meals: { slot: string }[]; totalCalories: number } };
 
@@ -20,14 +20,13 @@ export default function TodayCard() {
   const eaten = n && n !== "err" && n.log ? new Set(n.log.meals.map((m) => m.slot)) : new Set<string>();
   return <div className="stack">
     <div className="card todayCard">
-      <div className="row spread"><div className="small muted">TODAY'S WORKOUT</div>{w && w !== "err" && w.auto === "health_change" && <span className="pill">Updated for your check-in</span>}</div>
-      {w === null ? <p className="subtitle">Building your workout…</p> : w === "err" || !w.session ? <p className="subtitle">{w === "err" ? "Couldn't load." : w.error || "Finish your setup so we can build today's workout."}</p> : <>
+      <div className="row spread"><div className="small muted">TODAY'S WORKOUT</div>{w && w !== "err" && w.stale && <span className="pill">Rebuild suggested</span>}</div>
+      {w === null ? <p className="subtitle">Loading…</p> : w === "err" ? <p className="subtitle">Couldn't load.</p> : !w.session ? <p className="subtitle">{w.rest ? (w.fitness?.detail || "Rest today — your body needs it.") : w.needsCheckin ? "Do today's check-in, then answer a few questions and your workout is built for how you feel." : w.error || "Answer a few quick questions and your workout is built for you."}</p> : <>
         <div className="metric" style={{ fontSize: 28 }}>{w.session.estimatedMinutes} min</div>
         <p className="subtitle" style={{ margin: "4px 0 0" }}>{moves.slice(0, 3).map((m) => m.name).join(" · ")}{moves.length > 3 ? ` +${moves.length - 3} more` : ""}</p>
       </>}
       <div className="row" style={{ marginTop: 14, flexWrap: "wrap" }}>
-        <Link className="btn primary" href="/app/workout?start=1" style={{ flex: "1 1 160px", textAlign: "center" }}>▶ Start workout</Link>
-        <Link className="btn secondary" href="/app/workout">Plan & questions</Link>
+        {w && w !== "err" && w.rest ? <Link className="btn secondary" href="/app/health" style={{ flex: "1 1 160px", textAlign: "center" }}>Recovery follow-up</Link> : <><Link className="btn primary" href="/app/workout?start=1" style={{ flex: "1 1 160px", textAlign: "center" }}>▶ {w && w !== "err" && w.session ? "Start workout" : "Build & start workout"}</Link><Link className="btn secondary" href="/app/workout">Plan & questions</Link></>}
       </div>
     </div>
     <div className="card todayCard">

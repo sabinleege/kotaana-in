@@ -1,5 +1,5 @@
 type Provider = "openrouter" | "gemini";
-export type AiOptions = { system?: string; temperature?: number };
+export type AiOptions = { system?: string; temperature?: number; /** Overrides the default model (used for the larger review model). */ model?: string };
 
 const WORKOUT_SYSTEM = "You are a constrained Kotaana fitness personalization layer. You may only choose from verified IDs provided by the application. Never invent exercise IDs, medical diagnoses, or unsafe instructions.";
 
@@ -13,7 +13,7 @@ async function openrouter(prompt: string, o: AiOptions) {
   const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`, "Content-Type": "application/json", "HTTP-Referer": process.env.AUTH_URL || "http://localhost:3000", "X-Title": "Kotaana" },
-    body: JSON.stringify({ model: process.env.OPENROUTER_MODEL || "deepseek/deepseek-chat-v3.1", temperature: o.temperature ?? 0.1, response_format: { type: "json_object" }, messages: [{ role: "system", content: o.system || WORKOUT_SYSTEM }, { role: "user", content: prompt }] }),
+    body: JSON.stringify({ model: o.model || process.env.OPENROUTER_MODEL || "deepseek/deepseek-chat-v3.1", temperature: o.temperature ?? 0.1, response_format: { type: "json_object" }, messages: [{ role: "system", content: o.system || WORKOUT_SYSTEM }, { role: "user", content: prompt }] }),
   });
   if (!r.ok) throw new Error(`OpenRouter ${r.status}`);
   const d = await r.json();

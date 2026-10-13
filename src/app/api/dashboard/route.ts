@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { apiAuth } from "@/lib/auth/guard";
 import { bmiCategory, bmiOf, bodyFatCategory, nutritionTargets, weeksToGoal } from "@/lib/health/targets";
+import { athleteAccess } from "@/lib/access";
+import { fitnessStatus } from "@/lib/health/fitness";
+import { reviewDue } from "@/lib/ai/review";
 
 const DAY = 86400000;
 const dateOnly = (d: Date) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
@@ -14,6 +17,8 @@ const rate = (v: number | null, bands: [number, string, number][], fallback: [st
 export async function GET() {
   const a = await apiAuth("athlete"); if ("error" in a) return a.error;
   const userId = a.session.user.id;
+  const access = await athleteAccess(userId, a.session.user.role);
+  if (!access.allowed) return NextResponse.json({ error: "Your access has ended.", code: "ACCESS_EXPIRED" }, { status: 402 });
   const now = new Date(); const today = dateOnly(now);
   const since30 = new Date(today.getTime() - 30 * DAY); const since14 = new Date(today.getTime() - 13 * DAY); const since7 = new Date(today.getTime() - 6 * DAY);
 
@@ -29,6 +34,16 @@ export async function GET() {
     prisma.injury.count({ where: { athleteId: userId, status: { in: ["active", "recovering"] } } }),
   ]);
   if (!profile) return NextResponse.json({ error: "Profile not found." }, { status: 404 });
+  const [fitness, inbox, unread, due, rel, weeklyAt, monthlyAt] = await Promise.all([
+    fitnessStatus(userId),
+    prisma.notification.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 3, select: { id: true, title: true, message: true, type: true, read: true, createdAt: true } }),
+    prisma.notification.count({ where: { userId, read: false } }),
+    reviewDue(userId),
+    prisma.coachAthleteRelation.findFirst({ where: { athleteId: userId, status: { in: ["active", "paused"] } }, include: { coach: { select: { name: true, profile: { select: { fullName: true, organizationType: true } } } } }, orderBy: { updatedAt: "desc" } }),
+    prisma.questionnaire.findFirst({ where: { userId, kind: "weekly" }, orderBy: { createdAt: "desc" }, select: { createdAt: true } }),
+    prisma.questionnaire.findFirst({ where: { userId, kind: "monthly" }, orderBy: { createdAt: "desc" }, select: { createdAt: true } }),
+  ]);
+  const ageDays = (Date.now() - (await prisma.user.findUnique({ where: { id: userId }, select: { createdAt: true } }))!.createdAt.getTime()) / DAY;
 
   const weight = profile.weight ?? weights.at(-1)?.weight ?? null;
   const bmi = bmiOf(weight, profile.height);
@@ -109,5 +124,10 @@ export async function GET() {
     scores: { fitness: fitnessScore, recovery },
     health, goalPlan, burned, weightSeries,
     checkedInToday: Boolean(todayCheckin),
+    access: { reason: access.reason, daysLeft: access.daysLeft, expiresAt: access.expiresAt },
+    fitness, notifications: { unread, items: inbox },
+    community: rel ? { name: rel.coach.profile?.fullName || rel.coach.name || "your coach", type: rel.coach.profile?.organizationType || "coach", paused: rel.status === "paused" } : null,
+    review: { due: due.review, monthlyDue: due.monthly, latest: due.latestReview && { summary: due.latestReview.summary, wins: due.latestReview.wins, concerns: due.latestReview.concerns, suggestions: due.latestReview.suggestions, createdAt: due.latestReview.createdAt, source: due.latestReview.source }, latestMonthly: due.latestMonthly && { summary: due.latestMonthly.summary, suggestions: due.latestMonthly.suggestions, createdAt: due.latestMonthly.createdAt } },
+    questionnaire: { weeklyDue: ageDays >= 6 && (!weeklyAt || (Date.now() - weeklyAt.createdAt.getTime()) / DAY >= 7), monthlyDue: ageDays >= 28 && (!monthlyAt || (Date.now() - monthlyAt.createdAt.getTime()) / DAY >= 30) },
   });
 }

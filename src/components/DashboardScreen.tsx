@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ProgressChart } from "./charts/ProgressCharts";
 import HydrationTracker from "./HydrationTracker";
 import TodayCard from "./TodayCard";
+import { FitnessCard, NotificationsCard, QuestionnaireCard, ReviewCard, type Fitness } from "./HealthPanels";
 
 type Rating = { label: string; score: number; value?: number | null } | null;
 type D = {
@@ -18,7 +19,14 @@ type D = {
   goalPlan: { goal: string; calories: number; protein: number; sessionsPerWeek: number; weeks: number | null; next: string } | null;
   burned: { date: string; value: number }[];
   weightSeries: { date: string; value: number }[];
+  access: { reason: string; daysLeft: number };
+  fitness: Fitness;
+  notifications: { unread: number; items: { id: string; title: string; message: string; read: boolean; createdAt: string }[] };
+  community: { name: string; type: string; paused: boolean } | null;
+  review: { due: boolean; monthlyDue: boolean; latest: { summary: string; wins: string[]; concerns: string[]; suggestions: string[]; createdAt: string; source?: string } | null };
+  questionnaire: { weeklyDue: boolean; monthlyDue: boolean };
 };
+const KIND: Record<string, string> = { gym: "gym", club: "club", coach: "coach" };
 
 const TONE: Record<string, string> = { ok: "var(--ok)", orange: "var(--orange2)", danger: "var(--danger)", blue: "var(--blue)" };
 const GOALS: Record<string, string> = { general_fitness: "General fitness", fat_loss: "Fat loss", muscle_gain: "Muscle gain", endurance: "Endurance" };
@@ -46,11 +54,31 @@ function Bar({ label, value, target, unit = "g" }: { label: string; value: numbe
 export default function DashboardScreen() {
   const [d, setD] = useState<D | null>(null);
   const [err, setErr] = useState(false);
-  useEffect(() => { fetch("/api/dashboard").then((r) => (r.ok ? r.json() : Promise.reject())).then(setD).catch(() => setErr(true)); }, []);
+  const load = async () => {
+    const r = await fetch("/api/dashboard").catch(() => null);
+    if (r?.status === 402) { window.location.href = "/app/settings/subscription?expired=1"; return; }
+    if (!r?.ok) { setErr(true); return; }
+    const data: D = await r.json(); setD(data);
+    // A 3–7 day review is written automatically the first time the dashboard opens after it falls due (once a day at most).
+    const key = "kotaana-review-" + new Date().toLocaleDateString("en-CA");
+    let tried = false; try { tried = Boolean(sessionStorage.getItem(key)); } catch {}
+    if (data.review.due && !tried) {
+      try { sessionStorage.setItem(key, "1"); } catch {}
+      fetch("/api/ai/review", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: "review" }) }).then(() => fetch("/api/dashboard")).then((x) => (x.ok ? x.json() : null)).then((n) => n && setD(n)).catch(() => {});
+    }
+  };
+  useEffect(() => { void load(); const again = () => void load(); window.addEventListener("kotaana:checkin-saved", again); return () => window.removeEventListener("kotaana:checkin-saved", again); }, []);
 
   return <div className="stack">
     <div><span className="pill orange">TODAY</span><h1 style={{ fontSize: 30, margin: "10px 0 4px" }}>{d?.name ? `Hi, ${d.name.split(" ")[0]}` : "Your day, organized."}</h1><p className="subtitle">Your workout and meals are ready. Everything below comes from what you record.</p></div>
+    {d?.community && <div className="communityBanner">🏷 You're part of the {d.community.name} {KIND[d.community.type] || "coach"} community{d.community.paused ? " (paused by your coach)" : ""}.</div>}
+    {d?.access.reason === "trial" && <div className="card small"><strong>Free trial:</strong> {d.access.daysLeft} day{d.access.daysLeft === 1 ? "" : "s"} left. <Link href="/app/settings/subscription" style={{ color: "var(--orange2)" }}>Subscribe</Link> to keep going.</div>}
+    {d && <FitnessCard f={d.fitness} onChanged={() => void load()} />}
+    {d?.questionnaire.weeklyDue && <QuestionnaireCard kind="weekly" pregnant={Boolean(d.fitness.pregnancy)} onDone={() => void load()} />}
+    {d?.questionnaire.monthlyDue && <QuestionnaireCard kind="monthly" pregnant={false} onDone={() => void load()} />}
     <TodayCard />
+    {d && <NotificationsCard unread={d.notifications.unread} items={d.notifications.items} />}
+    {d && <ReviewCard latest={d.review.latest} due={d.review.due} onChanged={() => void load()} />}
     {err && <div className="card small">Couldn't load your numbers. Pull to refresh.</div>}
     {!d && !err && <div className="card"><p className="subtitle" style={{ margin: 0 }}>Loading your summary…</p></div>}
     {d && <>

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { athleteSignals, buildRecommendations, teamDaily, fmtDate } from "@/lib/coach/data";
 import { AthleteCard, Empty, PageHead, Stat } from "@/components/coach/CoachUI";
 import { ProgressChart } from "@/components/charts/ProgressCharts";
+import { capacityState } from "@/lib/coach/capacity";
 
 export const dynamic = "force-dynamic";
 export default async function CoachOverview() {
@@ -15,6 +16,7 @@ export default async function CoachOverview() {
     prisma.trainingSession.findMany({ where: { coachId, status: "scheduled", scheduledAt: { gte: new Date() } }, orderBy: { scheduledAt: "asc" }, take: 3 }),
     prisma.injury.findMany({ where: { athlete: { athleteRelations: { some: { coachId, status: "active" } } }, status: { in: ["active", "recovering"] } }, include: { athlete: { select: { name: true, email: true, profile: { select: { fullName: true } } } } }, orderBy: { dateReported: "desc" }, take: 5 }),
   ]);
+  const cap = await capacityState(coachId);
   const active = signals.filter((a) => a.status === "active");
   const readiness = active.map((a) => a.readinessAvg7).filter((v): v is number => v != null);
   const recs = buildRecommendations(signals);
@@ -25,7 +27,7 @@ export default async function CoachOverview() {
       <Link className="btn secondary" href="/coach/follow-ups">+ Follow-up</Link><Link className="btn primary" href="/coach/memberships">Subscriptions{pendingPayments ? ` (${pendingPayments})` : ""}</Link>
     </PageHead>
     <div className="statGrid">
-      <Stat label="Active athletes" value={active.length} hint={`${signals.length} on roster`} />
+      <Stat label="Members" value={`${cap.count} / ${cap.capacity}`} hint={cap.full ? "Full — upgrade in Settings" : `${active.length} active`} warn={cap.full} />
       <Stat label="Pending payment orders" value={pendingPayments} warn={pendingPayments > 0} hint={pendingPayments ? "Confirm in Subscriptions" : undefined} />
       <Stat label="Avg readiness (7d)" value={readiness.length ? Math.round(readiness.reduce((a, b) => a + b, 0) / readiness.length) : "—"} hint={readiness.length ? `${readiness.length} athlete(s) checked in` : "No check-ins this week"} />
       <Stat label="Blocks completed (7d)" value={active.reduce((s, a) => s + a.completed7, 0)} />

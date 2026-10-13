@@ -17,7 +17,7 @@ export default async function AthleteDetail({ params, searchParams }: { params: 
   const rel = await coachCanAccess(coachId, athleteId);
   if (!rel) return <div className="stack"><Link href="/coach/athletes" className="small muted">← Athletes</Link><Empty>This athlete is not on your roster, or the connection is not active.</Empty></div>;
 
-  const [user, series, injuries, followUps, notes, perfs, checkins] = await Promise.all([
+  const [user, series, injuries, followUps, notes, perfs, checkins, latestReview] = await Promise.all([
     prisma.user.findUnique({ where: { id: athleteId }, select: { email: true, name: true, image: true, profile: true } }),
     getProgressSeries(athleteId, 30),
     prisma.injury.findMany({ where: { athleteId }, orderBy: [{ status: "asc" }, { dateReported: "desc" }] }),
@@ -25,6 +25,7 @@ export default async function AthleteDetail({ params, searchParams }: { params: 
     prisma.coachNote.findMany({ where: { coachId, athleteId }, orderBy: { createdAt: "desc" } }),
     prisma.exercisePerformance.findMany({ where: { userId: athleteId }, orderBy: { createdAt: "desc" }, take: 60 }),
     prisma.dailyCheckin.findMany({ where: { userId: athleteId }, orderBy: { date: "desc" }, take: 7 }),
+    prisma.athleteReport.findFirst({ where: { userId: athleteId }, orderBy: { createdAt: "desc" } }),
   ]);
   const p = user?.profile; const name = p?.fullName || user?.name || user?.email || "Athlete";
   const readiness = series.daily.map((d) => d.readiness).filter((v): v is number => v != null);
@@ -76,8 +77,9 @@ export default async function AthleteDetail({ params, searchParams }: { params: 
           </div></div>
         <div className="solid"><h2 className="sectionTitle">Last 7 check-ins</h2><div className="rowList" style={{ marginTop: 8 }}>{checkins.map((c) => <div className="rowItem" key={c.id}><span>{fmtDate(c.date)}</span><span className="small muted">energy {c.energy} · soreness {c.soreness} · mood {c.mood}{c.sleepHours != null ? ` · ${c.sleepHours}h sleep` : ""}</span><strong>{c.readiness}</strong></div>)}{!checkins.length && <Empty>No check-ins yet.</Empty>}</div></div>
       </div>
+      {latestReview && <div className="solid"><h2 className="sectionTitle">Latest progress review</h2><p style={{ margin: "6px 0" }}>{latestReview.summary}</p><div className="small muted">{(latestReview.suggestions as string[]).slice(0, 3).map((x) => `• ${x}`).join("  ")}</div><div className="small dim" style={{ marginTop: 4 }}>{fmtDate(latestReview.createdAt)}</div></div>}
       <div className="solid"><h2 className="sectionTitle">Injuries ({activeInj.length} active)</h2>
-        <div className="rowList" style={{ margin: "10px 0 16px" }}>{injuries.map((i) => <div className="rowItem" key={i.id}><div><strong>{i.bodyPart} — {i.injuryType}</strong><div className="small muted">Severity {i.severity} · reported {fmtDate(i.dateReported)}{i.expectedReturn ? ` · return ${fmtDate(i.expectedReturn)}` : ""}{i.restrictions ? ` · ${i.restrictions}` : ""}</div></div><InjuryStatus id={i.id} status={i.status} /></div>)}{!injuries.length && <Empty>No injuries recorded.</Empty>}</div>
+        <div className="rowList" style={{ margin: "10px 0 16px" }}>{injuries.map((i) => <div className="rowItem" key={i.id}><div><strong>{i.bodyPart} — {i.injuryType}</strong><div className="small muted">Severity {i.severity} · reported {fmtDate(i.dateReported)}{i.expectedReturn ? ` · return ${fmtDate(i.expectedReturn)}` : ""}{i.estimatedDays ? ` · est. ${i.estimatedDays} days (${i.estimateSource === "doctor" ? "doctor" : i.estimateSource === "photo_ai" ? "photo estimate" : "estimate"})` : ""}{i.healingPercent ? ` · ${i.healingPercent}% healed` : ""}{i.onMedication ? " · on medicine" : ""}{i.restrictions ? ` · ${i.restrictions}` : ""}</div></div><InjuryStatus id={i.id} status={i.status} /></div>)}{!injuries.length && <Empty>No injuries recorded.</Empty>}</div>
         <h3 style={{ margin: "0 0 8px", fontSize: 15 }}>Log an injury</h3><InjuryForm athleteId={athleteId} /></div>
     </>}
 

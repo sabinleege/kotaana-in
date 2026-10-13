@@ -4,6 +4,7 @@ import { apiAuth } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db/prisma";
 import { getPricing } from "@/lib/subscription";
 import { initiateMomo, getMomoStatus } from "@/lib/momo/provider";
+import { capacityState, parseCapacityPlan } from "@/lib/coach/capacity";
 
 const schema = z.object({
   amount: z.number().int().min(100).max(10_000_000).optional(),
@@ -37,6 +38,12 @@ export async function POST(req: Request) {
     if (!amount) return NextResponse.json({ error: "This coach has not set a membership price yet." }, { status: 409 });
     const rel = await prisma.coachAthleteRelation.findFirst({ where: { coachId: d.coachId!, athleteId: userId, status: { in: ["active", "paused"] } }, select: { id: true } });
     if (!rel) return NextResponse.json({ error: "Choose this coach first, then pay for your membership." }, { status: 403 });
+  } else if (parseCapacityPlan(d.planType) != null) {
+    // A coach, gym or club paying to hold more than 70 members. Only the next tier above their current capacity can be bought.
+    if (a.session.user.role !== "coach") return NextResponse.json({ error: "Only coaches can buy member capacity." }, { status: 403 });
+    const st = await capacityState(userId);
+    if (parseCapacityPlan(d.planType) !== st.nextTier.max) return NextResponse.json({ error: `The next upgrade is ${st.nextTier.max} members.` }, { status: 409 });
+    amount = Math.round(st.nextTier.usd * (await getPricing()).rate);
   } else if (d.planType === "direct" || d.planType === "coach_plan") {
     amount = (await getPricing()).rwf;
   } else if (d.amount) amount = d.amount;
