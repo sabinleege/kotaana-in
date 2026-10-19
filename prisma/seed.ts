@@ -99,6 +99,8 @@ async function seedFoods() {
 
 async function main() {
   await seedExercises();
+  // SEED_ONLY=exercises is used by the build to top up the exercise library without touching anything else.
+  if (process.env.SEED_ONLY === "exercises") return;
   await seedFoods();
   const adminEmail="sabinleege@gmail.com";
   if (process.env.ADMIN_BOOTSTRAP_PASSWORD) {
