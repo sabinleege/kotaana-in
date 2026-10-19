@@ -181,6 +181,7 @@ model Profile {
   membershipPriceRwf Int?
   workoutIntensity String?
   organizationType String?
+  receiptEmails Boolean @default(true)
   focusAreas String[] @default([])
   focusLevel String @default("standard")
   memberCapacity Int @default(70)
@@ -343,6 +344,13 @@ model ExercisePerformance {
   effort String
   completed Boolean @default(true)
   notes String?
+  workSec Int?
+  restSec Int?
+  weightKg Float?
+  repsTotal Int?
+  setReps Json?
+  startedAt DateTime?
+  finishedAt DateTime?
   createdAt DateTime @default(now())
   @@index([userId, date])
   @@index([userId, exerciseId])

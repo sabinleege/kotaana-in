@@ -5,10 +5,12 @@ import { athleteSignals, buildRecommendations, teamDaily, fmtDate } from "@/lib/
 import { AthleteCard, Empty, PageHead, Stat } from "@/components/coach/CoachUI";
 import { ProgressChart } from "@/components/charts/ProgressCharts";
 import { capacityState } from "@/lib/coach/capacity";
+import { coachLock } from "@/components/coach/CoachLock";
 
 export const dynamic = "force-dynamic";
 export default async function CoachOverview() {
   const s = await requireRole("coach"); const coachId = s.user.id;
+  { const lock = await coachLock(coachId, "your dashboard numbers and members"); if (lock) return lock; }
   const [profile, signals, pendingPayments, daily, followUps, sessions, recentInjuries] = await Promise.all([
     prisma.profile.findUnique({ where: { userId: coachId }, select: { fullName: true } }),
     athleteSignals(coachId), prisma.paymentRequest.count({ where: { coachId, role: "athlete", status: "pending" } }), teamDaily(coachId, 30),

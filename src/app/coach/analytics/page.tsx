@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { coachLock } from "@/components/coach/CoachLock";
 import { requireRole } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db/prisma";
 import { athleteSignals, buildRecommendations, fmtDate, goalLabel, teamDaily } from "@/lib/coach/data";
@@ -18,7 +19,8 @@ const count = <T,>(xs: T[], keys: string[], f: (x: T) => string): [string, numbe
 
 /** Everything a coach needs to read their members' performance and income, on one page. */
 export default async function CoachAnalytics({ searchParams }: { searchParams: Promise<{ f?: string }> }) {
-  const s = await requireRole("coach"); const { f = "all" } = await searchParams;
+  const s = await requireRole("coach");
+  { const lock = await coachLock(s.user.id); if (lock) return lock; } const { f = "all" } = await searchParams;
   const [a, daily, paid] = await Promise.all([
     athleteSignals(s.user.id), teamDaily(s.user.id, 30),
     prisma.paymentRequest.findMany({ where: { coachId: s.user.id, role: "athlete", status: "approved" }, select: { amount: true, currency: true, updatedAt: true } }),

@@ -1,4 +1,5 @@
 import { requireRole } from "@/lib/auth/guard";
+import { coachLock } from "@/components/coach/CoachLock";
 import { prisma } from "@/lib/db/prisma";
 import { coachRelations } from "@/lib/coach/data";
 import { Avatar, Empty, PageHead, Stat } from "@/components/coach/CoachUI";
@@ -7,7 +8,8 @@ import { ProgressChart } from "@/components/charts/ProgressCharts";
 
 export const dynamic = "force-dynamic";
 export default async function GymAttendance() {
-  const s = await requireRole("coach"); const gymId = s.user.id;
+  const s = await requireRole("coach");
+  { const lock = await coachLock(s.user.id); if (lock) return lock; } const gymId = s.user.id;
   const rels = await coachRelations(gymId, ["active"]);
   const end = new Date(); const start = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate() - 29));
   const rows = await prisma.attendance.findMany({ where: { gymId, date: { gte: start } }, select: { athleteId: true, date: true } });

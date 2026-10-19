@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { coachLock } from "@/components/coach/CoachLock";
 import { requireRole } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db/prisma";
 import { coachRelations, fmtDate } from "@/lib/coach/data";
@@ -7,7 +8,8 @@ import { ActionButton, FollowUpForm } from "@/components/coach/CoachForms";
 
 export const dynamic = "force-dynamic";
 export default async function CoachFollowUps({ searchParams }: { searchParams: Promise<{ show?: string }> }) {
-  const s = await requireRole("coach"); const { show = "pending" } = await searchParams;
+  const s = await requireRole("coach");
+  { const lock = await coachLock(s.user.id); if (lock) return lock; } const { show = "pending" } = await searchParams;
   const [items, rels] = await Promise.all([
     prisma.followUp.findMany({ where: { coachId: s.user.id, ...(show === "all" ? {} : { status: "pending" }) }, include: { athlete: { select: { id: true, name: true, email: true, profile: { select: { fullName: true } } } } }, orderBy: [{ status: "asc" }, { dueDate: "asc" }, { createdAt: "desc" }] }),
     coachRelations(s.user.id, ["active"]),

@@ -42,3 +42,13 @@ END $$;
 -- Coach specialty and how demanding the coach wants athletes' workouts.
 ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "focusAreas" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
 ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "focusLevel" TEXT NOT NULL DEFAULT 'standard';
+
+-- Richer per-exercise metrics and receipt e-mail preference.
+ALTER TABLE "exercise_performances" ADD COLUMN IF NOT EXISTS "workSec" INTEGER;
+ALTER TABLE "exercise_performances" ADD COLUMN IF NOT EXISTS "restSec" INTEGER;
+ALTER TABLE "exercise_performances" ADD COLUMN IF NOT EXISTS "weightKg" DOUBLE PRECISION;
+ALTER TABLE "exercise_performances" ADD COLUMN IF NOT EXISTS "repsTotal" INTEGER;
+ALTER TABLE "exercise_performances" ADD COLUMN IF NOT EXISTS "setReps" JSONB;
+ALTER TABLE "exercise_performances" ADD COLUMN IF NOT EXISTS "startedAt" TIMESTAMP(3);
+ALTER TABLE "exercise_performances" ADD COLUMN IF NOT EXISTS "finishedAt" TIMESTAMP(3);
+ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "receiptEmails" BOOLEAN NOT NULL DEFAULT true;

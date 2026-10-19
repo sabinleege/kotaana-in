@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 import { getPricing } from "@/lib/subscription";
 import { initiateMomo, getMomoStatus } from "@/lib/momo/provider";
 import { capacityState, parseCapacityPlan } from "@/lib/coach/capacity";
+import { coachPremium } from "@/lib/coach/premium";
 
 const schema = z.object({
   amount: z.number().int().min(100).max(10_000_000).optional(),
@@ -34,6 +35,7 @@ export async function POST(req: Request) {
 
   let amount: number;
   if (d.planType === "coach_service") {
+    if (!(await coachPremium(d.coachId!))) return NextResponse.json({ error: "This coach hasn't activated their Kotaana plan yet, so they can't receive payments. Please try again later.", code: "COACH_NOT_ACTIVE" }, { status: 409 });
     amount = coach?.profile?.membershipPriceRwf ?? 0;
     if (!amount) return NextResponse.json({ error: "This coach has not set a membership price yet." }, { status: 409 });
     const rel = await prisma.coachAthleteRelation.findFirst({ where: { coachId: d.coachId!, athleteId: userId, status: { in: ["active", "paused"] } }, select: { id: true } });

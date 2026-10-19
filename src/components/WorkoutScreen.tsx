@@ -74,8 +74,8 @@ export default function WorkoutScreen() {
     setMsg(`Your workout is ready — built from ${d.session.meta.candidateCount} safe exercises that fit your goal.`);
   };
 
-  const mark = async (m: any, effort: "easy" | "ok" | "hard" | "skipped") => {
-    const body = effort === "skipped" ? { exerciseId: m.exerciseId, exerciseName: m.name, effort: "easy", completed: false, notes: "Skipped during session" } : { exerciseId: m.exerciseId, exerciseName: m.name, setsDone: m.sets, repsDone: m.reps ? String(m.reps) : undefined, durationSec: m.durationSec, effort, completed: true };
+  const mark = async (m: any, effort: "easy" | "ok" | "hard" | "skipped", metrics: Metrics = {}) => {
+    const body = effort === "skipped" ? { exerciseId: m.exerciseId, exerciseName: m.name, effort: "easy", completed: false, notes: "Skipped during session" } : { exerciseId: m.exerciseId, exerciseName: m.name, setsDone: metrics.setReps ? metrics.setReps.length : m.sets, repsDone: metrics.setReps ? metrics.setReps.join(",") : m.reps ? String(m.reps) : undefined, durationSec: m.durationSec, effort, completed: true, ...metrics };
     await fetch("/api/workout/perform", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     setDone((d) => ({ ...d, [m.exerciseId]: effort })); cue("done");
   };
@@ -166,17 +166,38 @@ function BlockTimer({ seconds }: { seconds: number }) {
   return left == null ? <button className="btn secondary small" onClick={() => setLeft(seconds)}>⏱ Timer {seconds}s</button> : <button className="btn primary small" onClick={() => setLeft(null)}>{left}s · stop</button>;
 }
 
-function MoveRow({ m, started, state, onMark }: { m: any; started: boolean; state?: string; onMark: (m: any, e: "easy" | "ok" | "hard" | "skipped") => void }) {
+type Metrics = { workSec?: number; weightKg?: number; setReps?: number[]; startedAt?: string };
+const fmtClock = (n: number) => `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
+
+/** Everything recorded for one block: how long you worked, reps in every set, weight used and how it felt. */
+function BlockTracker({ m, onMark }: { m: any; onMark: (m: any, e: "easy" | "ok" | "hard" | "skipped", metrics?: Metrics) => void }) {
+  const countable = typeof m.reps === "number" || /^\d/.test(String(m.reps || ""));
+  const target = Number.parseInt(String(m.reps || 0), 10) || 10; const sets = m.sets || 1;
+  const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [elapsed, setElapsed] = useState(0);
+  const [reps, setReps] = useState<number[]>(() => Array.from({ length: sets }, () => target));
+  const [weight, setWeight] = useState("");
+  useEffect(() => { if (startedAt == null) return; const t = setInterval(() => setElapsed(Math.floor((Date.now() - startedAt) / 1000)), 500); return () => clearInterval(t); }, [startedAt]);
+  const send = (e: "easy" | "ok" | "hard") => onMark(m, e, { workSec: startedAt ? Math.max(1, Math.floor((Date.now() - startedAt) / 1000)) : undefined, startedAt: startedAt ? new Date(startedAt).toISOString() : undefined, setReps: countable ? reps : undefined, weightKg: Number(weight) > 0 ? Number(weight) : undefined });
+  return <div className="tracker stack" style={{ gap: 8 }}>
+    <div className="row spread"><button className={startedAt ? "btn primary small" : "btn secondary small"} onClick={() => { if (startedAt == null) { setStartedAt(Date.now()); cue("done"); } }}>{startedAt ? `⏱ ${fmtClock(elapsed)} working` : "▶ Start this block"}</button>{m.durationSec ? <BlockTimer seconds={m.durationSec} /> : null}</div>
+    {countable && <div><div className="small muted">Reps in each set (target {target})</div><div className="repGrid">{reps.map((r, i) => <div className="repCell" key={i}><span className="small muted">Set {i + 1}</span><div className="row" style={{ gap: 4 }}><button type="button" className="repBtn" onClick={() => setReps(reps.map((x, j) => (j === i ? Math.max(0, x - 1) : x)))}>−</button><strong>{r}</strong><button type="button" className="repBtn" onClick={() => setReps(reps.map((x, j) => (j === i ? x + 1 : x)))}>+</button></div></div>)}</div></div>}
+    <div className="row spread"><label className="small muted" htmlFor={`w-${m.order}`}>Weight used (kg, optional)</label><input id={`w-${m.order}`} className="input sleepInput" type="number" min={0} step="0.5" inputMode="decimal" value={weight} onChange={(e) => setWeight(e.target.value)} /></div>
+    <div className="row" style={{ flexWrap: "wrap", gap: 6 }}>
+      {(["easy", "ok", "hard"] as const).map((e) => <button key={e} className="btn secondary small" style={{ padding: "6px 10px" }} onClick={() => send(e)}>Done · {e}</button>)}
+      <button className="btn secondary small" style={{ padding: "6px 10px" }} onClick={() => onMark(m, "skipped")}>skip</button>
+    </div>
+  </div>;
+}
+
+function MoveRow({ m, started, state, onMark }: { m: any; started: boolean; state?: string; onMark: (m: any, e: "easy" | "ok" | "hard" | "skipped", metrics?: Metrics) => void }) {
   const [open, setOpen] = useState(false);
   const sub = `${m.role}${m.sets ? ` · ${m.sets} sets` : ""}${m.reps ? ` · ${m.reps} reps` : ""}${m.durationSec ? ` · ${m.durationSec}s` : ""}${m.restSec ? ` · rest ${m.restSec}s` : ""}${m.estimatedMin ? ` · ~${m.estimatedMin} min` : ""}`;
   return <div className={`item moveItem${state ? " moveDone" : ""}`}>
     <div className="moveHead"><div><strong>{state && state !== "skipped" ? "✓ " : ""}{m.order}. {m.name}</strong><div className="small muted">{sub}</div>{m.format && <span className="pill orange" style={{ marginTop: 4 }}>New format: {m.format}</span>}<button className="linkBtn" onClick={() => setOpen(!open)} aria-expanded={open}>{open ? "Hide demo ▴" : "How to do it ▾"}</button></div></div>
     {m.notes && <p className="small muted" style={{ margin: 0 }}>{m.notes}</p>}
-    {started && <div className="row" style={{ flexWrap: "wrap", gap: 6 }}>
-      {m.durationSec ? <BlockTimer seconds={m.durationSec} /> : null}
-      {(["easy", "ok", "hard"] as const).map((e) => <button key={e} className="btn secondary small" style={{ padding: "6px 10px" }} onClick={() => onMark(m, e)}>{state === e ? "✓ " : ""}Done · {e}</button>)}
-      <button className="btn secondary small" style={{ padding: "6px 10px" }} onClick={() => onMark(m, "skipped")}>{state === "skipped" ? "✓ " : ""}skip</button>
-    </div>}
+    {started && !state && <BlockTracker m={m} onMark={onMark} />}
+    {started && state && <div className="small muted">Recorded: {state}. <button className="linkBtn" style={{ display: "inline" }} onClick={() => onMark(m, state === "skipped" ? "ok" : "ok")}>Record again</button></div>}
     {open && <HowTo m={m} />}
   </div>;
 }

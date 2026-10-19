@@ -1,4 +1,5 @@
 import { requireRole } from "@/lib/auth/guard";
+import { coachLock } from "@/components/coach/CoachLock";
 import { prisma } from "@/lib/db/prisma";
 import { coachRelations } from "@/lib/coach/data";
 import { Empty, PageHead } from "@/components/coach/CoachUI";
@@ -7,6 +8,7 @@ import { ActionButton, SessionForm } from "@/components/coach/CoachForms";
 export const dynamic = "force-dynamic";
 export default async function CoachSessions() {
   const s = await requireRole("coach");
+  { const lock = await coachLock(s.user.id); if (lock) return lock; }
   const [sessions, rels] = await Promise.all([prisma.trainingSession.findMany({ where: { coachId: s.user.id }, orderBy: { scheduledAt: "desc" }, take: 100 }), coachRelations(s.user.id, ["active"])]);
   const names = new Map(rels.map((r) => [r.athleteId, r.athlete.profile?.fullName || r.athlete.name || r.athlete.email]));
   const now = new Date();

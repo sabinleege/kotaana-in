@@ -26,7 +26,7 @@ export async function aiDailyFoodPlan(ctx: MealPlanContext): Promise<{ meals: Pl
   const wanted = ctx.mealsPerDay >= 4 ? ["breakfast", "lunch", "snack", "dinner"] : ["breakfast", "lunch", "dinner"];
   if (ctx.trainsToday) wanted.push("post_workout");
   const prompt = JSON.stringify({
-    task: "Plan today's meals. Return JSON {\"meals\":[{\"slot\":string,\"foods\":[{\"name\":string,\"portion\":string,\"calories\":number,\"protein\":number,\"carbs\":number,\"fat\":number}],\"note\":string}],\"summary\":string}. Use exactly these slots in this order: " + wanted.join(", ") + ". 2-5 foods per meal, portions in grams or household measures. Calories/macros are per portion listed. The day's total must land within 5% of the calorie target. Vary the plan day to day (seed: " + ctx.dayKey + ").",
+    task: "Plan today's meals. Return JSON {\"meals\":[{\"slot\":string,\"foods\":[{\"name\":string,\"portion\":string,\"calories\":number,\"protein\":number,\"carbs\":number,\"fat\":number,\"alternatives\":[{\"name\":string,\"portion\":string}]}],\"note\":string}],\"summary\":string}. Use exactly these slots in this order: " + wanted.join(", ") + ". 2-5 foods per meal, portions in grams or household measures. Calories/macros are per portion listed. The day's total must land within 5% of the calorie target. Vary the plan day to day (seed: " + ctx.dayKey + ").",
     location: place || "unknown — use widely available, affordable foods",
     climate: ctx.climate,
     goal: ctx.goal || "general_fitness",
@@ -50,10 +50,10 @@ export async function aiDailyFoodPlan(ctx: MealPlanContext): Promise<{ meals: Pl
   for (const m of parsed.meals) {
     const slot = SLOTS.find((s) => s === m?.slot);
     if (!slot || !Array.isArray(m.foods)) continue;
-    const foods = m.foods.slice(0, 6).map((f: any, i: number) => ({ id: `ai-${slot}-${i}`, name: String(f?.name || "").trim().slice(0, 80), servingSize: f?.portion ? String(f.portion).slice(0, 40) : null, calories: num(f?.calories, 2500), protein: num(f?.protein, 250), carbs: num(f?.carbs, 500), fat: num(f?.fat, 250) })).filter((f: { name: string }) => f.name);
+    const foods = m.foods.slice(0, 6).map((f: any, i: number) => ({ id: `ai-${slot}-${i}`, name: String(f?.name || "").trim().slice(0, 80), servingSize: f?.portion ? String(f.portion).slice(0, 40) : null, calories: num(f?.calories, 2500), protein: num(f?.protein, 250), carbs: num(f?.carbs, 500), fat: num(f?.fat, 250), alternatives: Array.isArray(f?.alternatives) ? f.alternatives.slice(0, 2).map((a: any) => ({ name: String(a?.name || "").trim().slice(0, 60), portion: String(a?.portion || "").slice(0, 40), calories: num(f?.calories, 2500) })).filter((a: { name: string }) => a.name) : [] })).filter((f: { name: string }) => f.name);
     if (!foods.length) continue;
     // Anything that breaks an allergy, dietary style or health rule invalidates the whole AI answer rather than being silently kept.
-    const unsafe = foods.some((f: { name: string }) => { const asFood = { name: f.name, category: "", allergyTags: [], dietaryTags: [] } as unknown as Food; return !allergySafe(asFood, ctx.allergies) || !dietarySafe(asFood, ctx.dietaryStyle) || ctx.avoidFoods.some((rx) => rx.test(norm(f.name))); });
+    const unsafe = foods.some((f: { name: string; alternatives?: { name: string }[] }) => [f.name, ...(f.alternatives ?? []).map((a) => a.name)].some((nm) => { const asFood = { name: nm, category: "", allergyTags: [], dietaryTags: [] } as unknown as Food; return !allergySafe(asFood, ctx.allergies) || !dietarySafe(asFood, ctx.dietaryStyle) || ctx.avoidFoods.some((rx) => rx.test(norm(nm))); }));
     if (unsafe) return null;
     const sum = (k: "calories" | "protein" | "carbs" | "fat") => foods.reduce((n: number, f: any) => n + f[k], 0);
     meals.push({ slot, name: LABEL[slot], foods, calories: sum("calories"), protein: sum("protein"), carbs: sum("carbs"), fat: sum("fat"), note: m.note ? String(m.note).slice(0, 160) : undefined });

@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import NutritionPrefsForm from "./setup/NutritionPrefsForm";
 import HydrationTracker from "./HydrationTracker";
 
-type Food = { id: string; name: string; servingSize: string | null; calories: number; protein: number; carbs: number; fat: number };
+type Alt = { name: string; portion: string; calories: number };
+type Food = { id: string; name: string; servingSize: string | null; calories: number; protein: number; carbs: number; fat: number; grams?: number; alternatives?: Alt[] };
 type Meal = { slot: string; name: string; foods: Food[]; calories: number; protein: number; carbs?: number; fat?: number; note?: string };
 type Plan = { meals: Meal[]; hydration: { mlTarget: number }; healthNotes: string[]; summary: string; weatherNote: string; locationLabel: string; source?: "ai" | "library"; targets?: { calories: number; protein: number; carbs: number; fat: number } };
 type Logged = { slot: string; calories: number; protein: number; carbs: number; fat: number; status: "eaten" | "verified" | "partial" | "mismatch" | "unchecked"; note?: string };
@@ -81,22 +82,37 @@ export default function NutritionScreen() {
     </div>
 
     <div className="stack mealList">
-      {plan.meals.map((m) => {
-        const l = logged(m.slot); const isOpen = open === m.slot || !l;
-        return <div className={`card mealCard${l ? " logged" : ""}`} key={m.slot}>
-          <div className="row spread" style={{ alignItems: "flex-start" }}>
-            <div className="row" style={{ alignItems: "flex-start", gap: 12 }}><span className="mealIcon">{ICON[m.slot] || "🍽"}</span><div><h2 className="sectionTitle" style={{ margin: 0 }}>{m.name}</h2><div className="small muted">{m.protein} g protein{m.carbs != null ? ` · ${m.carbs} g carbs` : ""}{m.fat != null ? ` · ${m.fat} g fat` : ""}</div></div></div>
-            <div style={{ textAlign: "right" }}><strong style={{ fontSize: 20 }}>{m.calories}</strong><div className="small muted">kcal</div></div>
-          </div>
-          {l && <div className="row" style={{ marginTop: 10, flexWrap: "wrap" }}><span className={`prio ${STATUS[l.status].cls}`}>{STATUS[l.status].text}</span>{l.status !== "eaten" && l.calories !== m.calories && <span className="small muted">counted as {l.calories} kcal</span>}<button className="linkBtn" style={{ margin: 0 }} onClick={() => setOpen(open === m.slot ? null : m.slot)}>{isOpen ? "Hide ▴" : "Details ▾"}</button></div>}
-          {l?.note && <p className="small muted" style={{ margin: "6px 0 0" }}>{l.note}</p>}
-          {isOpen && <div className="list" style={{ marginTop: 12 }}>{m.foods.map((f, i) => <div className="item" key={f.id + i}><div style={{ minWidth: 0 }}><strong>{f.name}</strong><div className="small muted">{f.servingSize || "1 serving"} · {f.protein} g P · {f.carbs} g C · {f.fat} g F</div></div><strong>{f.calories} <span className="small muted">kcal</span></strong></div>)}</div>}
-          {isOpen && m.note && <p className="small muted" style={{ margin: "8px 0 0" }}>💡 {m.note}</p>}
-          <div className="row" style={{ marginTop: 12, flexWrap: "wrap" }}>
-            {!l ? <button className="btn primary small" disabled={busy === m.slot} onClick={() => send(m.slot, {})}>✓ I ate this</button> : <button className="btn secondary small" disabled={busy === m.slot} onClick={() => send(m.slot, { remove: true })}>Undo</button>}
-            <button className="btn secondary small" disabled={busy === m.slot} onClick={() => { photoFor.current = m.slot; fileRef.current?.click(); }}>📷 {l ? "Re-check with photo" : "Verify with photo"}</button>
-          </div>
-        </div>;
+      {([["Breakfast", ["breakfast"]], ["Lunch", ["lunch"]], ["Dinner", ["dinner"]], ["Snacks & post-workout", ["snack", "post_workout"]]] as [string, string[]][]).map(([title, slots]) => {
+        const meals = plan.meals.filter((m) => slots.includes(m.slot)); if (!meals.length) return null;
+        const kcal = meals.reduce((n, m) => n + m.calories, 0); const allLogged = meals.every((m) => logged(m.slot));
+        return <details className={`card mealSection${allLogged ? " logged" : ""}`} key={title} open={open === title}>
+          <summary onClick={(e) => { e.preventDefault(); setOpen(open === title ? null : title); }}>
+            <div className="row spread" style={{ alignItems: "flex-start" }}>
+              <div className="row" style={{ gap: 12, alignItems: "flex-start" }}><span className="mealIcon">{ICON[meals[0].slot] || "🍽"}</span><div><h2 className="sectionTitle" style={{ margin: 0 }}>{title}</h2><div className="small muted">{meals.flatMap((m) => m.foods).map((f) => `${f.name.split(",")[0]} ${f.grams ? f.grams + " g" : (f.servingSize || "")}`.trim()).join(" · ")}</div></div></div>
+              <div style={{ textAlign: "right", flex: "0 0 auto" }}><strong style={{ fontSize: 20 }}>{kcal}</strong><div className="small muted">kcal {open === title ? "▴" : "▾"}</div></div>
+            </div>
+            {allLogged && <div className="row" style={{ marginTop: 8 }}><span className="prio low">eaten</span></div>}
+          </summary>
+          {open === title && meals.map((m) => {
+            const l = logged(m.slot);
+            return <div key={m.slot} className="stack" style={{ gap: 10, marginTop: 14 }}>
+              {meals.length > 1 && <div className="row spread"><strong>{m.name}</strong><span className="small muted">{m.calories} kcal</span></div>}
+              <div className="tableWrap"><table className="nutriTable"><thead><tr><th>Food</th><th>Quantity</th><th>kcal</th><th>Protein</th><th>Carbs</th><th>Fat</th></tr></thead>
+                <tbody>{m.foods.map((f, i) => <>
+                  <tr key={f.id + i}><td className="foodName" title={f.name}>{f.name.split(",").slice(0, 3).join(",")}</td><td>{f.grams ? `${f.grams} g` : f.servingSize || "1 serving"}{f.grams && f.servingSize ? <div className="small muted">{f.servingSize}</div> : null}</td><td>{f.calories}</td><td>{f.protein} g</td><td>{f.carbs} g</td><td>{f.fat} g</td></tr>
+                  {f.alternatives && f.alternatives.length > 0 && <tr key={f.id + i + "alt"} className="altRow"><td colSpan={6}><span className="altLabel">Or instead</span>{f.alternatives.map((a) => <span className="altChip" key={a.name}>{a.name.split(",").slice(0, 2).join(",")} · {a.portion}</span>)}</td></tr>}
+                </>)}</tbody>
+                <tfoot><tr><td colSpan={2}>Total</td><td>{m.calories}</td><td>{m.protein} g</td><td>{m.carbs ?? "—"}{m.carbs != null ? " g" : ""}</td><td>{m.fat ?? "—"}{m.fat != null ? " g" : ""}</td></tr></tfoot></table></div>
+              {m.note && <p className="small muted" style={{ margin: 0 }}>💡 {m.note}</p>}
+              {l && <div className="row" style={{ flexWrap: "wrap" }}><span className={`prio ${STATUS[l.status].cls}`}>{STATUS[l.status].text}</span>{l.status !== "eaten" && l.calories !== m.calories && <span className="small muted">counted as {l.calories} kcal</span>}</div>}
+              {l?.note && <p className="small muted" style={{ margin: 0 }}>{l.note}</p>}
+              <div className="row" style={{ flexWrap: "wrap" }}>
+                {!l ? <button className="btn primary small" disabled={busy === m.slot} onClick={() => send(m.slot, {})}>✓ I ate this</button> : <button className="btn secondary small" disabled={busy === m.slot} onClick={() => send(m.slot, { remove: true })}>Undo</button>}
+                <button className="btn secondary small" disabled={busy === m.slot} onClick={() => { photoFor.current = m.slot; fileRef.current?.click(); }}>📷 {l ? "Re-check with photo" : "Verify with photo"}</button>
+              </div>
+            </div>;
+          })}
+        </details>;
       })}
     </div>
 

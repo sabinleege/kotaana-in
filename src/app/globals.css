@@ -180,3 +180,18 @@ html[data-theme="light"] .side{border-color:var(--border)}
 .healCard .barTrack{margin:6px 0}.communityBanner{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid rgba(255,107,0,.35);border-radius:14px;background:rgba(255,107,0,.08);font-weight:700;font-size:14px}
 .reviewList{margin:6px 0 0;padding-left:18px;font-size:13px;line-height:1.5}.reviewList li{margin:2px 0}
 .noteRow{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:12px;background:var(--card2);font-size:13px}.noteRow.unread{border-left:3px solid var(--orange)}
+
+.tracker{padding:10px;border:1px dashed var(--border);border-radius:12px;background:var(--card)}
+.repGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:6px}.repCell{display:flex;flex-direction:column;gap:4px;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--card2)}.repCell strong{min-width:26px;text-align:center;font-size:18px}
+.repBtn{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:18px;line-height:1}
+
+/* Nutrition: three expandable sections with a full table inside. */
+.mealSection{padding:0;overflow:hidden}.mealSection summary{list-style:none;cursor:pointer;padding:16px 18px}.mealSection summary::-webkit-details-marker{display:none}.mealSection>div{padding:0 18px 18px}.mealSection[open]{border-color:rgba(255,107,0,.4);box-shadow:0 10px 30px rgba(255,107,0,.08)}.mealSection.logged{border-color:rgba(54,211,153,.45)}
+.nutriTable{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;min-width:520px;font-variant-numeric:tabular-nums}
+.nutriTable th{position:sticky;top:0;text-align:left;padding:9px 10px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--card2);border-bottom:1px solid var(--border)}
+.nutriTable th:first-child{border-top-left-radius:10px}.nutriTable th:last-child{border-top-right-radius:10px}
+.nutriTable td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top}.nutriTable td.foodName{font-weight:700;max-width:220px}
+.nutriTable tr.altRow td{padding:6px 10px 12px;background:rgba(255,107,0,.05);border-bottom:1px solid var(--border)}
+.altLabel{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--orange2);margin-right:8px}
+.altChip{display:inline-block;margin:2px 6px 2px 0;padding:3px 10px;border:1px solid var(--border);border-radius:999px;background:var(--card);font-size:12px}
+.nutriTable tfoot td{font-weight:800;background:var(--card2);border-bottom:0}.nutriTable tfoot td:first-child{border-bottom-left-radius:10px}.nutriTable tfoot td:last-child{border-bottom-right-radius:10px}

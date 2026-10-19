@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 import { CoachPayPanel, SubscribePanel } from "@/components/billing/BillingForms";
 import { SOURCE_LABEL, accessState, getPlatformCode, getPricing } from "@/lib/subscription";
 import { athleteAccess } from "@/lib/access";
+import { coachPremium } from "@/lib/coach/premium";
 
 export const dynamic = "force-dynamic";
 export default async function AthleteSubscription() {
@@ -15,6 +16,7 @@ export default async function AthleteSubscription() {
     prisma.coachAthleteRelation.findFirst({ where: { athleteId: userId, status: { in: ["active", "paused"] } }, include: { coach: { select: { id: true, name: true, profile: { select: { fullName: true, membershipPriceRwf: true, momoNumber: true, momoName: true } } } } }, orderBy: { updatedAt: "desc" } }),
   ]);
   const st = accessState(sub);
+  const coachPayable = rel ? await coachPremium(rel.coachId) : true;
   const gate = await athleteAccess(userId, s?.user?.role);
   const coach = rel?.coach; const coachName = coach ? coach.profile?.fullName || coach.name || "your coach" : "";
   const pendingCoach = rel ? history.some((p) => p.status === "pending" && p.planType === "coach_service" && p.coachId === rel.coachId) : false;
@@ -28,7 +30,7 @@ export default async function AthleteSubscription() {
     <div className="card">{st.active ? <><span className="prio low">active</span><div style={{ fontSize: 22, fontWeight: 900, margin: "8px 0 2px" }}>{st.daysLeft} day{st.daysLeft === 1 ? "" : "s"} left</div><p className="small muted" style={{ margin: 0 }}>Until {st.expiresAt!.toLocaleDateString("en-GB", { dateStyle: "long" })} · {SOURCE_LABEL[st.source || ""] || "Active"}</p></> : <><span className="prio high">inactive</span><p style={{ margin: "8px 0 0" }}>{coach ? `You don't have active access. Pay ${coachName} below to unlock 30 days.` : "You don't have active access. Subscribe below, or find a coach who can give you access."}</p></>}</div>
     {coach ? <>
       <div><h2 className="sectionTitle">{st.active ? "Renew" : "Pay"} your membership</h2><p className="small muted" style={{ margin: "4px 0 10px" }}>Access always lasts 30 days from confirmation; renewing early never adds extra days.</p></div>
-      <CoachPayPanel coachId={coach.id} coachName={coachName} priceRwf={coach.profile?.membershipPriceRwf ?? null} momoNumber={coach.profile?.momoNumber ?? null} momoName={coach.profile?.momoName ?? null} pending={pendingCoach} />
+      <CoachPayPanel coachId={coach.id} coachName={coachName} priceRwf={coach.profile?.membershipPriceRwf ?? null} momoNumber={coach.profile?.momoNumber ?? null} momoName={coach.profile?.momoName ?? null} pending={pendingCoach} payable={coachPayable} />
       <details className="card prefsCard"><summary><h2 className="sectionTitle">Or subscribe to Kotaana directly</h2><span className="small muted">${price.usd} / 30 days, no coach needed</span></summary><div style={{ marginTop: 12 }}>{direct}</div></details>
     </> : <>
       <div><h2 className="sectionTitle">{st.active ? "Renew" : "Subscribe"} — ${price.usd} / 30 days</h2><p className="small muted" style={{ margin: "4px 0 10px" }}>Access always lasts 30 days from approval; renewing early never adds extra days. Training with a coach? <Link href="/app/settings/coach" style={{ color: "var(--orange2)" }}>Find your coach</Link> and pay them instead.</p></div>

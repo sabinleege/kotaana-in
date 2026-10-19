@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { coachLock } from "@/components/coach/CoachLock";
 import { requireRole } from "@/lib/auth/guard";
 import { athleteSignals, buildRecommendations } from "@/lib/coach/data";
 import { Empty, PageHead } from "@/components/coach/CoachUI";
@@ -7,6 +8,7 @@ import { ActionButton } from "@/components/coach/CoachForms";
 export const dynamic = "force-dynamic";
 export default async function CoachRecommendations() {
   const s = await requireRole("coach");
+  { const lock = await coachLock(s.user.id); if (lock) return lock; }
   const recs = buildRecommendations(await athleteSignals(s.user.id, ["active"]));
   return <div className="stack" style={{ gap: 14 }}>
     <PageHead eyebrow="RECOMMENDATIONS" title="Who needs you today" sub="Flagged from injuries, check-ins, missed workouts and health conditions. Turn any item into a follow-up — the athlete gets a notification." />

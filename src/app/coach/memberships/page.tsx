@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { coachLock } from "@/components/coach/CoachLock";
 import { requireRole } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db/prisma";
 import { fmtDate } from "@/lib/coach/data";
@@ -9,7 +10,8 @@ import { accessState } from "@/lib/subscription";
 
 export const dynamic = "force-dynamic";
 export default async function GymSubscriptions() {
-  const s = await requireRole("coach"); const gymId = s.user.id;
+  const s = await requireRole("coach");
+  { const lock = await coachLock(s.user.id); if (lock) return lock; } const gymId = s.user.id;
   const [profile, rels, payments] = await Promise.all([
     prisma.profile.findUnique({ where: { userId: gymId }, select: { membershipPriceRwf: true, momoNumber: true } }),
     prisma.coachAthleteRelation.findMany({ where: { coachId: gymId, status: { in: ["active", "paused"] } }, include: { athlete: { select: { name: true, email: true, subscriptions: true, profile: { select: { fullName: true, avatarUrl: true } } } } }, orderBy: { createdAt: "desc" } }),

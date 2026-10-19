@@ -46,7 +46,10 @@ const CURATED_BASELINE_EXERCISES = [
 ];
 
 async function seedExercises() {
-  const files = ["free-exercise-db-ready.json","bryllim-ready.json","mohamedatef-ready.json"];
+  // Every *-ready.json file in data/exercises is seeded, so adding a new dataset only means dropping its file there.
+  const dir = path.join(process.cwd(),"data","exercises");
+  const known = ["free-exercise-db-ready.json","bryllim-ready.json","mohamedatef-ready.json"];
+  const files = [...known, ...fs.readdirSync(dir).filter((f)=>f.endsWith("-ready.json")&&!known.includes(f)).sort()];
   const seen = new Set<string>();
   const rows: any[] = [];
   for (const file of files) {

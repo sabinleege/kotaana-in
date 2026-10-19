@@ -20,6 +20,7 @@ type D = {
   burned: { date: string; value: number }[];
   weightSeries: { date: string; value: number }[];
   access: { reason: string; daysLeft: number };
+  training7: { blocks: number; workMinutes: number; reps: number; sets: number; volumeKg: number };
   fitness: Fitness;
   notifications: { unread: number; items: { id: string; title: string; message: string; read: boolean; createdAt: string }[] };
   community: { name: string; type: string; paused: boolean } | null;
@@ -93,6 +94,7 @@ export default function DashboardScreen() {
         <Tile icon="♥" value={d.scores.recovery ?? "—"} label="Recovery" sub={d.scores.recovery == null ? "Do a daily check-in" : "From your check-ins"} href="/app/health" />
       </div>
 
+      <div className="card stack" style={{ gap: 10 }}><h2 className="sectionTitle">Your training, last 7 days</h2><div className="chipGrid"><div className="chip"><span className="muted">Blocks done</span><strong>{d.training7.blocks}</strong></div><div className="chip"><span className="muted">Time worked</span><strong>{d.training7.workMinutes} min</strong></div><div className="chip"><span className="muted">Sets</span><strong>{d.training7.sets}</strong></div><div className="chip"><span className="muted">Reps</span><strong>{d.training7.reps}</strong></div>{d.training7.volumeKg > 0 && <div className="chip"><span className="muted">Weight lifted</span><strong>{d.training7.volumeKg.toLocaleString()} kg</strong></div>}</div></div>
       <div className="card">
         <div className="row spread"><h2 className="sectionTitle">Health overview</h2><Link className="linkBtn" href="/app/health">Details →</Link></div>
         {d.health.score == null ? <p className="subtitle" style={{ margin: "8px 0 0" }}>Not enough recorded data yet. Do your daily check-in and log meals and water.</p> : <>

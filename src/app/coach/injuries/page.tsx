@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { coachLock } from "@/components/coach/CoachLock";
 import { requireRole } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db/prisma";
 import { coachRelations, fmtDate } from "@/lib/coach/data";
@@ -7,7 +8,8 @@ import { InjuryStatus } from "@/components/coach/CoachForms";
 
 export const dynamic = "force-dynamic";
 export default async function CoachInjuries({ searchParams }: { searchParams: Promise<{ q?: string; sev?: string; all?: string }> }) {
-  const s = await requireRole("coach"); const { q = "", sev = "all", all } = await searchParams;
+  const s = await requireRole("coach");
+  { const lock = await coachLock(s.user.id); if (lock) return lock; } const { q = "", sev = "all", all } = await searchParams;
   const rels = await coachRelations(s.user.id, ["active", "paused"]);
   const names = new Map(rels.map((r) => [r.athleteId, r.athlete.profile?.fullName || r.athlete.name || r.athlete.email]));
   const injuries = await prisma.injury.findMany({ where: { athleteId: { in: [...names.keys()] }, ...(all ? {} : { status: { in: ["active", "recovering"] } }) }, orderBy: [{ severity: "desc" }, { dateReported: "desc" }] });

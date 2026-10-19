@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { coachLock } from "@/components/coach/CoachLock";
 import { requireRole } from "@/lib/auth/guard";
 import { athleteSignals } from "@/lib/coach/data";
 import { AthleteCard, Empty, PageHead } from "@/components/coach/CoachUI";
@@ -8,7 +9,8 @@ export const dynamic = "force-dynamic";
 const FILTERS = [["all", "All"], ["active", "Active"], ["paused", "Paused"], ["injured", "Injured"]] as const;
 
 export default async function CoachAthletes({ searchParams }: { searchParams: Promise<{ q?: string; f?: string }> }) {
-  const s = await requireRole("coach"); const { q = "", f = "all" } = await searchParams;
+  const s = await requireRole("coach");
+  { const lock = await coachLock(s.user.id); if (lock) return lock; } const { q = "", f = "all" } = await searchParams;
   const signals = await athleteSignals(s.user.id);
   const needle = q.trim().toLowerCase();
   const view = signals.filter((a) => (!needle || a.name.toLowerCase().includes(needle) || a.email.toLowerCase().includes(needle)) && (f === "all" || (f === "injured" ? a.activeInjuries > 0 : a.status === f)));

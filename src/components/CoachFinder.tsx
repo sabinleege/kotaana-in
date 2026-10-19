@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-type Coach = { id: string; name: string; avatar: string | null; city: string | null; priceRwf: number | null; momoNumber: string | null; momoName: string | null };
+type Coach = { id: string; name: string; avatar: string | null; city: string | null; payable?: boolean; priceRwf: number | null; momoNumber: string | null; momoName: string | null };
 
 /** Search coaches by name and pick one; the connection is made immediately. */
 export default function CoachFinder({ currentCoachId, currentCoachName }: { currentCoachId?: string | null; currentCoachName?: string | null }) {
@@ -40,7 +40,7 @@ export default function CoachFinder({ currentCoachId, currentCoachName }: { curr
     {msg && <p className={`small ${msg.ok ? "success" : "danger"}`} style={{ margin: 0 }}>{msg.text}</p>}
     <div className="list">
       {results.map((c) => <div className="item" key={c.id}>
-        <div style={{ minWidth: 0 }}><strong>{c.name}</strong><div className="small muted">{[c.city, c.priceRwf ? `${c.priceRwf.toLocaleString()} RWF / 30 days` : "Price not set yet"].filter(Boolean).join(" · ")}</div></div>
+        <div style={{ minWidth: 0 }}><strong>{c.name}</strong><div className="small muted">{[c.city, c.priceRwf ? `${c.priceRwf.toLocaleString()} RWF / 30 days` : "Price not set yet", c.payable === false ? "Not taking payments yet" : null].filter(Boolean).join(" · ")}</div></div>
         {c.id === currentCoachId ? <span className="pill">✓ Your coach</span> : <button className="btn primary small" disabled={busy === c.id} onClick={() => choose(c)}>{busy === c.id ? "…" : "Choose"}</button>}
       </div>)}
       {searched && !results.length && <div className="empty">No coach found with that name.</div>}

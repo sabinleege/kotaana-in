@@ -42,7 +42,7 @@ export function AccessButtons({ url, userKey, userId, active, canRevoke = true }
 }
 
 /** Pay the connected coach/gym. The price is the one the coach set and cannot be changed here; the order shows as pending in the coach's portal until they confirm it. */
-export function CoachPayPanel({ coachId, coachName, priceRwf, momoNumber, momoName, pending }: { coachId: string; coachName: string; priceRwf: number | null; momoNumber: string | null; momoName: string | null; pending: boolean }) {
+export function CoachPayPanel({ coachId, coachName, priceRwf, momoNumber, momoName, pending, payable = true }: { coachId: string; coachName: string; priceRwf: number | null; momoNumber: string | null; momoName: string | null; pending: boolean; payable?: boolean }) {
   const router = useRouter();
   const [f, setF] = useState({ number: "", name: "" });
   const [busy, setBusy] = useState(false);
@@ -56,6 +56,7 @@ export function CoachPayPanel({ coachId, coachName, priceRwf, momoNumber, momoNa
     if (r?.ok) router.refresh();
   };
   if (pending) return <div className="card"><span className="prio normal">order sent · pending</span><p style={{ margin: "8px 0 0" }}>Your payment order is waiting for <strong>{coachName}</strong> to confirm it. You get 30 days of access as soon as they do.</p></div>;
+  if (!payable) return <div className="card"><span className="prio normal">not available yet</span><p className="small muted" style={{ margin: "8px 0 0" }}><strong>{coachName}</strong> hasn't activated their Kotaana plan yet, so payments to them are switched off for now. Their MoMo number is {momoNumber || "not set"} — please wait until they are active before paying.</p></div>;
   if (!priceRwf || !momoNumber) return <div className="card"><p className="small muted" style={{ margin: 0 }}><strong>{coachName}</strong> has not set a price and MoMo number yet, so payments can't be recorded. Ask them to finish their settings.</p></div>;
   return <div className="card stack" style={{ gap: 12 }}>
     <div className="row spread" style={{ flexWrap: "wrap" }}><div><div className="small muted">MEMBERSHIP · {coachName}</div><div style={{ fontSize: 26, fontWeight: 900 }}>{priceRwf.toLocaleString()} <span className="small muted">RWF / 30 days</span></div></div><span className="pill">Fixed by your coach</span></div>

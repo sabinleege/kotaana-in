@@ -2,7 +2,7 @@ import { aiText } from "./router";
 import type { ExerciseRow, UserWorkoutContext } from "@/lib/workout/types";
 
 const BATCH = 160;
-const MAX_BATCHES = 10;
+const MAX_BATCHES = 20; // 20 x 160 = 3,200 exercises, so a library of 2,000+ is covered in full
 const SYSTEM = "You are a constrained Kotaana fitness personalization layer. You may only choose from verified IDs provided by the application. Never invent exercise IDs, medical diagnoses, or unsafe instructions.";
 
 /** Asks the model about the person's WHOLE safe pool, not a sample: the pool is split into batches, every batch is shown to the model in parallel, and each returns the best few. The union is the AI's preference list. */

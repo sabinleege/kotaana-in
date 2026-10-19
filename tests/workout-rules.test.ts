@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { buildDailySession, goalFit, safePool } from "@/lib/workout/engine";
 import type { ExerciseRow, UserWorkoutContext } from "@/lib/workout/types";
 
-const mk = (i: number, extra: Partial<ExerciseRow> = {}): ExerciseRow => ({ id: "e" + i, name: `Move number ${i}`, bodyPart: "legs", target: "quads", category: "strength", equipment: "body only", difficulty: "beginner", verified: true, tracks: ["general"], goals: ["general_fitness"], safetyTags: [], contraindicationTags: [], roleTags: [], secondaryMuscles: [], ...extra });
+const tok = (i: number) => "q" + i.toString(26).replace(/[0-9]/g, (c) => "abcdefghij"[+c]).padStart(3, "z");
+const mk = (i: number, extra: Partial<ExerciseRow> = {}): ExerciseRow => ({ id: "e" + i, name: `Move ${tok(i)}`, bodyPart: "legs", target: "quads", category: "strength", equipment: "body only", difficulty: "beginner", verified: true, tracks: ["general"], goals: ["general_fitness"], safetyTags: [], contraindicationTags: [], roleTags: [], secondaryMuscles: [], ...extra });
 const base = (): ExerciseRow[] => [
   ...Array.from({ length: 40 }, (_, i) => mk(i)),
   mk(100, { name: "Gentle stretch", roleTags: ["stretch"] }), mk(101, { name: "Easy warm up", roleTags: ["warmup"] }), mk(102, { name: "Plank hold", roleTags: ["core"] }),
@@ -13,7 +14,7 @@ const day = (n: number) => new Date(Date.UTC(2026, 9, 1 + n));
 
 describe("goal-focused selection", () => {
   it("only gives goal-serving work when enough of it exists", () => {
-    const ex = [...Array.from({ length: 20 }, (_, i) => mk(i, { name: `Heavy press ${i}`, goals: ["muscle_gain"] })), ...Array.from({ length: 20 }, (_, i) => mk(50 + i, { name: `Easy circle ${i}`, goals: ["general_fitness"] })), mk(100, { name: "Gentle stretch", roleTags: ["stretch"] }), mk(101, { name: "Easy warm up", roleTags: ["warmup"] })];
+    const ex = [...Array.from({ length: 20 }, (_, i) => mk(i, { name: `Heavy press ${tok(i)}`, goals: ["muscle_gain"] })), ...Array.from({ length: 20 }, (_, i) => mk(50 + i, { name: `Easy circle ${tok(i)}`, goals: ["general_fitness"] })), mk(100, { name: "Gentle stretch", roleTags: ["stretch"] }), mk(101, { name: "Easy warm up", roleTags: ["warmup"] })];
     for (let d = 0; d < 6; d++) for (const m of mains(buildDailySession(ex, ctx({ goal: "muscle_gain" }), day(d)))) expect(Number(m.exerciseId.slice(1))).toBeLessThan(20);
   });
   it("goalFit recognises cardio for fat loss and strength for muscle gain", () => {
@@ -53,7 +54,7 @@ describe("repeating an exercise on purpose", () => {
 
 describe("children and teenagers", () => {
   it("never get barbell or machine work and are capped at moderate effort", () => {
-    const ex = [...base(), ...Array.from({ length: 15 }, (_, i) => mk(200 + i, { name: `Barbell lift ${i}`, equipment: "barbell" }))];
+    const ex = [...base(), ...Array.from({ length: 15 }, (_, i) => mk(200 + i, { name: `Barbell lift ${tok(i)}`, equipment: "barbell" }))];
     for (let d = 0; d < 6; d++) {
       const s = buildDailySession(ex, ctx({ ageBand: "youth_u14", equipment: ["bodyweight", "barbell"], level: "advanced", goal: "general_fitness", availableMinutes: 60 }), day(d));
       expect(s.moves.some((m) => /barbell/i.test(m.name))).toBe(false);
@@ -66,7 +67,7 @@ describe("children and teenagers", () => {
 
 describe("health adjustments", () => {
   it("drops the words the day must avoid (late pregnancy) and shows the notes", () => {
-    const ex = [...base(), ...Array.from({ length: 10 }, (_, i) => mk(300 + i, { name: `Crunch variation ${i}` }))];
+    const ex = [...base(), ...Array.from({ length: 10 }, (_, i) => mk(300 + i, { name: `Crunch variation ${tok(i)}` }))];
     for (let d = 0; d < 6; d++) {
       const s = buildDailySession(ex, ctx({ isPregnant: true, extraAvoid: ["crunch"], extraNotes: ["Pregnancy week 30: no crunches."] }), day(d));
       expect(s.moves.some((m) => m.name.toLowerCase().includes("crunch"))).toBe(false);
@@ -78,14 +79,14 @@ describe("health adjustments", () => {
     expect(s.moves.every((m) => !m.effort || m.effort === "easy")).toBe(true);
   });
   it("keeps jumping exercises out when a knee injury is recorded", () => {
-    const ex = [...base(), ...Array.from({ length: 12 }, (_, i) => mk(400 + i, { name: `Jump squat ${i}` }))];
+    const ex = [...base(), ...Array.from({ length: 12 }, (_, i) => mk(400 + i, { name: `Jump squat ${tok(i)}` }))];
     for (let d = 0; d < 6; d++) expect(buildDailySession(ex, ctx({ injuries: [{ bodyPart: "Knee", status: "active" }] }), day(d)).moves.some((m) => /jump/i.test(m.name))).toBe(false);
   });
 });
 
 describe("several goals, coach focus and demanding coaches", () => {
   it("gives every chosen goal at least one main block", () => {
-    const ex = [...Array.from({ length: 12 }, (_, i) => mk(i, { name: `Heavy press ${i}`, goals: ["muscle_gain"] })), ...Array.from({ length: 12 }, (_, i) => mk(50 + i, { name: `Mountain climber ${i}`, goals: ["fat_loss"] })), mk(100, { name: "Gentle stretch", roleTags: ["stretch"] }), mk(101, { name: "Easy warm up", roleTags: ["warmup"] })];
+    const ex = [...Array.from({ length: 12 }, (_, i) => mk(i, { name: `Heavy press ${tok(i)}`, goals: ["muscle_gain"] })), ...Array.from({ length: 12 }, (_, i) => mk(50 + i, { name: `Mountain climber ${tok(i)}`, goals: ["fat_loss"] })), mk(100, { name: "Gentle stretch", roleTags: ["stretch"] }), mk(101, { name: "Easy warm up", roleTags: ["warmup"] })];
     for (let d = 0; d < 6; d++) {
       const m = mains(buildDailySession(ex, ctx({ goal: "muscle_gain", goals: ["muscle_gain", "fat_loss"] }), day(d)));
       expect(m.some((x) => /Heavy press/.test(x.name))).toBe(true);
@@ -102,13 +103,13 @@ describe("several goals, coach focus and demanding coaches", () => {
     expect(kid.length).toBeLessThanOrEqual(3);
   });
   it("coach specialty words pull matching exercises onto the short list", () => {
-    const ex = [...Array.from({ length: 30 }, (_, i) => mk(i)), ...Array.from({ length: 6 }, (_, i) => mk(60 + i, { name: `Agility ladder ${i}` })), mk(100, { name: "Gentle stretch", roleTags: ["stretch"] }), mk(101, { name: "Easy warm up", roleTags: ["warmup"] })];
+    const ex = [...Array.from({ length: 30 }, (_, i) => mk(i)), ...Array.from({ length: 6 }, (_, i) => mk(60 + i, { name: `Agility ladder ${tok(i)}` })), mk(100, { name: "Gentle stretch", roleTags: ["stretch"] }), mk(101, { name: "Easy warm up", roleTags: ["warmup"] })];
     let withFocus = 0, without = 0;
     for (let d = 0; d < 20; d++) { withFocus += mains(buildDailySession(ex, ctx({ focusWords: ["agility"] }), day(d))).filter((m) => /Agility/.test(m.name)).length; without += mains(buildDailySession(ex, ctx(), day(d))).filter((m) => /Agility/.test(m.name)).length; }
     expect(withFocus).toBeGreaterThan(without);
   });
   it("safePool keeps only exercises that pass the safety filters, so the AI is shown the whole safe pool", () => {
-    const ex = [...base(), ...Array.from({ length: 5 }, (_, i) => mk(500 + i, { name: `Jump squat ${i}`, equipment: "barbell" }))];
+    const ex = [...base(), ...Array.from({ length: 5 }, (_, i) => mk(500 + i, { name: `Jump squat ${tok(i)}`, equipment: "barbell" }))];
     const pool = safePool(ex, ctx({ injuries: [{ bodyPart: "Knee", status: "active" }] }));
     expect(pool.length).toBe(base().length);
     expect(pool.some((e) => /Jump/.test(e.name))).toBe(false);

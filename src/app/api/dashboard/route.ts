@@ -34,6 +34,9 @@ export async function GET() {
     prisma.injury.count({ where: { athleteId: userId, status: { in: ["active", "recovering"] } } }),
   ]);
   if (!profile) return NextResponse.json({ error: "Profile not found." }, { status: 404 });
+  const perf7 = await prisma.exercisePerformance.findMany({ where: { userId, date: { gte: new Date(Date.now() - 7 * 86400000) }, completed: true }, select: { workSec: true, repsTotal: true, weightKg: true, setReps: true, setsDone: true } });
+  const volume7 = Math.round(perf7.reduce((n, p) => n + (p.weightKg ?? 0) * (p.repsTotal ?? 0), 0));
+  const training7 = { blocks: perf7.length, workMinutes: Math.round(perf7.reduce((n, p) => n + (p.workSec ?? 0), 0) / 60), reps: perf7.reduce((n, p) => n + (p.repsTotal ?? 0), 0), sets: perf7.reduce((n, p) => n + (p.setsDone ?? 0), 0), volumeKg: volume7 };
   const [fitness, inbox, unread, due, rel, weeklyAt, monthlyAt] = await Promise.all([
     fitnessStatus(userId),
     prisma.notification.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 3, select: { id: true, title: true, message: true, type: true, read: true, createdAt: true } }),
@@ -124,6 +127,7 @@ export async function GET() {
     scores: { fitness: fitnessScore, recovery },
     health, goalPlan, burned, weightSeries,
     checkedInToday: Boolean(todayCheckin),
+    training7,
     access: { reason: access.reason, daysLeft: access.daysLeft, expiresAt: access.expiresAt },
     fitness, notifications: { unread, items: inbox },
     community: rel ? { name: rel.coach.profile?.fullName || rel.coach.name || "your coach", type: rel.coach.profile?.organizationType || "coach", paused: rel.status === "paused" } : null,

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { coachLock } from "@/components/coach/CoachLock";
 import { requireRole } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db/prisma";
 import { coachCanAccess, fmtDate, goalLabel } from "@/lib/coach/data";
@@ -12,7 +13,8 @@ export const dynamic = "force-dynamic";
 const TABS = [["overview", "Overview"], ["workouts", "Workouts"], ["health", "Health & injuries"], ["follow-ups", "Follow-ups"], ["notes", "Notes"]] as const;
 
 export default async function AthleteDetail({ params, searchParams }: { params: Promise<{ athleteId: string }>; searchParams: Promise<{ tab?: string }> }) {
-  const s = await requireRole("coach"); const coachId = s.user.id;
+  const s = await requireRole("coach");
+  { const lock = await coachLock(s.user.id); if (lock) return lock; } const coachId = s.user.id;
   const { athleteId } = await params; const { tab = "overview" } = await searchParams;
   const rel = await coachCanAccess(coachId, athleteId);
   if (!rel) return <div className="stack"><Link href="/coach/athletes" className="small muted">← Athletes</Link><Empty>This athlete is not on your roster, or the connection is not active.</Empty></div>;
