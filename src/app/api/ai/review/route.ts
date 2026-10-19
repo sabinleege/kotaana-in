@@ -4,6 +4,7 @@ import { paywallResponse } from "@/lib/access";
 import { generateReview, reviewDue, type ReviewKind } from "@/lib/ai/review";
 
 const DAY = 86400000;
+export const maxDuration = 60;
 export async function GET() {
   const a = await apiAuth("athlete"); if ("error" in a) return a.error;
   const d = await reviewDue(a.session.user.id);

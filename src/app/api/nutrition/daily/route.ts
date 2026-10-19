@@ -83,6 +83,7 @@ async function respond(userId: string, force: boolean) {
   }
 }
 
+export const maxDuration = 60;
 export async function GET() { const a = await apiAuth("athlete"); if ("error" in a) return a.error; const blocked = await paywallResponse(a.session.user.id, a.session.user.role); if (blocked) return blocked; return respond(a.session.user.id, false); }
 /** Builds a fresh plan for today on request. */
 export async function POST() {

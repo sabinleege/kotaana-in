@@ -16,6 +16,7 @@ export type LoggedMeal = { foods?: string[]; slot: string; name: string; calorie
 const clean = (raw: string) => raw.replace(/^```(?:json)?|```$/g, "").trim();
 
 /** Marks a planned meal as eaten. With a photo, the AI checks that the plate matches the plan and the logged calories follow what it sees. */
+export const maxDuration = 60;
 export async function POST(req: Request) {
   const a = await apiAuth("athlete"); if ("error" in a) return a.error;
   const p = body.safeParse(await req.json().catch(() => null));

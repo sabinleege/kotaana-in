@@ -42,10 +42,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   events: {
     // Accounts created through Google start as athletes; a coach who chose "Coach / Gym" before continuing is upgraded here.
     async createUser({ user }) {
+      if (!user.id || !user.email) return;
+      const email = user.email.toLowerCase();
       try {
-        const wanted = (await cookies()).get("kotaana_signup_role")?.value;
-        if (wanted === "coach" && user.id) await prisma.user.update({ where: { id: user.id }, data: { role: "coach" } });
-      } catch {}
+        let wanted: string | undefined;
+        try { wanted = (await cookies()).get("kotaana_signup_role")?.value; } catch {}
+        const role = email === ADMIN_EMAIL ? "admin" : wanted === "coach" ? "coach" : undefined;
+        if (role) await prisma.user.update({ where: { id: user.id }, data: { role } });
+        await prisma.profile.upsert({ where: { userId: user.id }, update: {}, create: { userId: user.id, fullName: user.name || "", email, avatarUrl: user.image || null, organizationType: role === "coach" ? "coach" : null } });
+      } catch (e) { console.error("[auth] could not finish creating the Google account", e); }
     },
   },
   callbacks: {
@@ -64,14 +69,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
         return true;
       }
-      if (user.id && normalized === ADMIN_EMAIL) await prisma.user.update({ where: { id: user.id }, data: { role: "admin" } });
-      if (user.id) {
-        await prisma.profile.upsert({
-          where: { userId: user.id },
-          update: { fullName: user.name || "", email: normalized, avatarUrl: user.image || null },
-          create: { userId: user.id, fullName: user.name || "", email: normalized, avatarUrl: user.image || null },
-        });
-      }
+      // A new account has no database row yet: its profile and role are created in events.createUser, right after the adapter saves the user.
       return Boolean(account);
     },
     async jwt({ token, user }) {

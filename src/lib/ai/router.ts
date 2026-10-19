@@ -1,5 +1,5 @@
 type Provider = "openrouter" | "gemini";
-export type AiOptions = { system?: string; temperature?: number; /** Overrides the default model (used for the larger review model). */ model?: string };
+export type AiOptions = { system?: string; temperature?: number; timeoutMs?: number; /** Overrides the default model (used for the larger review model). */ model?: string };
 
 const WORKOUT_SYSTEM = "You are a constrained Kotaana fitness personalization layer. You may only choose from verified IDs provided by the application. Never invent exercise IDs, medical diagnoses, or unsafe instructions.";
 
@@ -18,6 +18,7 @@ async function openrouter(prompt: string, o: AiOptions) {
 }
 async function openrouterCall(prompt: string, o: AiOptions, json: boolean) {
   const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    signal: AbortSignal.timeout(o.timeoutMs ?? 22000),
     method: "POST",
     headers: { Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`, "Content-Type": "application/json", "HTTP-Referer": process.env.AUTH_URL || "http://localhost:3000", "X-Title": "Kotaana" },
     body: JSON.stringify({ model: o.model || process.env.OPENROUTER_MODEL || "deepseek/deepseek-chat-v3.1", temperature: o.temperature ?? 0.1, ...(json ? { response_format: { type: "json_object" } } : {}), messages: [{ role: "system", content: o.system || WORKOUT_SYSTEM }, { role: "user", content: prompt }] }),
@@ -31,6 +32,7 @@ async function gemini(prompt: string, o: AiOptions) {
   const key = process.env.GEMINI_API_KEY;
   const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
   const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key!)}`, {
+    signal: AbortSignal.timeout(22000),
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ contents: [{ parts: [{ text: `${o.system || "You are a constrained Kotaana fitness personalization layer. Only choose verified IDs supplied by the app."} Return JSON only.\n${prompt}` }] }], generationConfig: { temperature: o.temperature ?? 0.1, responseMimeType: "application/json" } }),
@@ -53,6 +55,7 @@ export async function aiVision(prompt: string, image: { mimeType: string; base64
   if (!key) return null;
   const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
   const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`, {
+    signal: AbortSignal.timeout(22000),
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ contents: [{ parts: [{ text: `${prompt}\nReturn JSON only.` }, { inline_data: { mime_type: image.mimeType, data: image.base64 } }] }], generationConfig: { temperature: 0.1, responseMimeType: "application/json" } }),

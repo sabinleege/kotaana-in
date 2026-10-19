@@ -119,6 +119,7 @@ async function build(userId: string, reason: string): Promise<Built> {
 }
 
 /** Build or rebuild today's workout from the answers the athlete just gave. */
+export const maxDuration = 60;
 export async function POST() {
   const a = await apiAuth("athlete"); if ("error" in a) return a.error;
   const blocked = await paywallResponse(a.session.user.id, a.session.user.role); if (blocked) return blocked;

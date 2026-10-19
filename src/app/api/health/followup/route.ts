@@ -18,6 +18,7 @@ const body = z.object({
 });
 
 /** Items whose follow-up is due (every 3–7 days depending on how serious they are). */
+export const maxDuration = 60;
 export async function GET() {
   const a = await apiAuth("athlete"); if ("error" in a) return a.error;
   const f = await fitnessStatus(a.session.user.id);

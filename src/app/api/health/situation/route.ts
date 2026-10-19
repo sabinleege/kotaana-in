@@ -13,6 +13,7 @@ const body = z.object({
 });
 
 /** The "I'm sick" / "I'm injured" cards from the daily check-in: records the problem, estimates how long to full fitness (a doctor's number wins), and schedules the first follow-up. */
+export const maxDuration = 60;
 export async function POST(req: Request) {
   const a = await apiAuth("athlete"); if ("error" in a) return a.error;
   const p = body.safeParse(await req.json().catch(() => null));

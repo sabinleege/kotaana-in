@@ -7,3 +7,6 @@ prisma/dev.db
 coverage
 .DS_Store
 *.tsbuildinfo
+
+.vercel
+.env*
