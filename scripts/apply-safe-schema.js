@@ -41,6 +41,8 @@ const STATEMENTS = [
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'athlete_reports_userId_fkey') THEN ALTER TABLE "athlete_reports" ADD CONSTRAINT "athlete_reports_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE; END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'questionnaires_userId_fkey') THEN ALTER TABLE "questionnaires" ADD CONSTRAINT "questionnaires_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE; END IF;
 END $$`,
+  `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "focusAreas" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[]`,
+  `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "focusLevel" TEXT NOT NULL DEFAULT 'standard'`,
   // Coaches now accept athletes automatically, so requests that were waiting become active connections.
   `UPDATE "coach_athlete_relations" SET "status" = 'active' WHERE "status" = 'pending'`,
 ];

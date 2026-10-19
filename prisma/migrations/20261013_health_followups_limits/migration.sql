@@ -38,3 +38,7 @@ DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'athlete_reports_userId_fkey') THEN ALTER TABLE "athlete_reports" ADD CONSTRAINT "athlete_reports_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE; END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'questionnaires_userId_fkey') THEN ALTER TABLE "questionnaires" ADD CONSTRAINT "questionnaires_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE; END IF;
 END $$;
+
+-- Coach specialty and how demanding the coach wants athletes' workouts.
+ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "focusAreas" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
+ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "focusLevel" TEXT NOT NULL DEFAULT 'standard';

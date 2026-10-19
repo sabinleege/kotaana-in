@@ -72,7 +72,8 @@ export async function generateReview(userId: string, kind: ReviewKind) {
   const m = await gatherMetrics(userId, days);
   let body: ReviewBody | null = null; let source = "rules";
   const prompt = JSON.stringify({ task: kind === "monthly" ? "Write the monthly review: what changed this month, what to change in the plan, and which of the person's saved details (weight, target, training days, level, goal) look out of date." : "Write the 3–7 day review of how this person is doing and what to adjust next.", reply: { summary: "3-4 sentences", wins: ["up to 4"], concerns: ["up to 4"], suggestions: ["up to 5 concrete changes to training, food, rest or goal"] }, data: m });
-  for (const model of [process.env.OPENROUTER_REVIEW_MODEL || "deepseek/deepseek-r1", undefined]) {
+  // Larger review models, best first: your own choice, NVIDIA Nemotron Ultra, DeepSeek R1, then the everyday model.
+  for (const model of [...new Set([process.env.OPENROUTER_REVIEW_MODEL, "nvidia/llama-3.1-nemotron-ultra-253b-v1", "deepseek/deepseek-r1"].filter(Boolean) as string[]), undefined]) {
     try {
       const raw = await aiText(prompt, { system: SYSTEM, temperature: 0.3, model });
       const json = raw?.match(/\{[\s\S]*\}/)?.[0];

@@ -1,1 +1,1 @@
-import {NextResponse} from "next/server"; export async function GET(){return NextResponse.json({ok:true,service:"kotaana",timestamp:new Date().toISOString()});}
+import {NextResponse} from "next/server"; export async function GET(){return NextResponse.json({ok:true,service:"kotaana",timestamp:new Date().toISOString(),setup:{authSecret:Boolean(process.env.AUTH_SECRET||process.env.NEXTAUTH_SECRET),authUrl:Boolean(process.env.AUTH_URL),google:Boolean(process.env.GOOGLE_CLIENT_ID&&process.env.GOOGLE_CLIENT_SECRET),database:Boolean(process.env.DATABASE_URL)}});}

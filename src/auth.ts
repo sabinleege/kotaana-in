@@ -11,7 +11,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
   trustHost: true,
-  pages: { signIn: "/auth" },
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+  // Errors (for example a missing server setting) land on our own page instead of the bare "Server error" screen.
+  pages: { signIn: "/auth", error: "/auth" },
   providers: [
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
       ? [Google({ clientId: process.env.GOOGLE_CLIENT_ID, clientSecret: process.env.GOOGLE_CLIENT_SECRET, allowDangerousEmailAccountLinking: true })]

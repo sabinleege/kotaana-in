@@ -10,14 +10,21 @@ function pick(): Provider | null {
 }
 
 async function openrouter(prompt: string, o: AiOptions) {
+  // Some models (for example Nemotron) reject JSON mode; if so, ask again as plain text and let the caller pull the JSON out of it.
+  const first = await openrouterCall(prompt, o, true);
+  if (first.status === 400) { const again = await openrouterCall(prompt, o, false); if (again.ok) return again.text; }
+  if (!first.ok) throw new Error(`OpenRouter ${first.status}`);
+  return first.text;
+}
+async function openrouterCall(prompt: string, o: AiOptions, json: boolean) {
   const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`, "Content-Type": "application/json", "HTTP-Referer": process.env.AUTH_URL || "http://localhost:3000", "X-Title": "Kotaana" },
-    body: JSON.stringify({ model: o.model || process.env.OPENROUTER_MODEL || "deepseek/deepseek-chat-v3.1", temperature: o.temperature ?? 0.1, response_format: { type: "json_object" }, messages: [{ role: "system", content: o.system || WORKOUT_SYSTEM }, { role: "user", content: prompt }] }),
+    body: JSON.stringify({ model: o.model || process.env.OPENROUTER_MODEL || "deepseek/deepseek-chat-v3.1", temperature: o.temperature ?? 0.1, ...(json ? { response_format: { type: "json_object" } } : {}), messages: [{ role: "system", content: o.system || WORKOUT_SYSTEM }, { role: "user", content: prompt }] }),
   });
-  if (!r.ok) throw new Error(`OpenRouter ${r.status}`);
+  if (!r.ok) return { ok: false as const, status: r.status, text: "" };
   const d = await r.json();
-  return d.choices?.[0]?.message?.content || "";
+  return { ok: true as const, status: r.status, text: (d.choices?.[0]?.message?.content || "") as string };
 }
 
 async function gemini(prompt: string, o: AiOptions) {

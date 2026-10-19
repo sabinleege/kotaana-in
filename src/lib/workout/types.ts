@@ -20,6 +20,7 @@ export type ExerciseRow = {
   roleTags?: string[];
   estimatedMinutes?: number | null;
   verified?: boolean;
+  safetyReviewed?: boolean | null;
 };
 
 export type PerformanceRecord = {
@@ -67,6 +68,12 @@ export type UserWorkoutContext = {
   extraNotes?: string[];
   /** Lowest allowed effort for the day (for example "easy" when the athlete is unwell). */
   effortCap?: "easy" | "moderate" | "hard";
+  /** Every goal the athlete picked (the first is the main one). */
+  goals?: string[];
+  /** Words describing the coach's / gym's specialty; matching exercises are favoured. */
+  focusWords?: string[];
+  /** 0 standard · 1 demanding · 2 elite: adds a block, a set and shorter rests on the main work. */
+  demand?: 0 | 1 | 2;
 };
 
 export type SessionMove = {

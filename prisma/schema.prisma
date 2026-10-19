@@ -181,6 +181,8 @@ model Profile {
   membershipPriceRwf Int?
   workoutIntensity String?
   organizationType String?
+  focusAreas String[] @default([])
+  focusLevel String @default("standard")
   memberCapacity Int @default(70)
   capacityUntil DateTime?
   momoNumber String?

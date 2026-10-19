@@ -20,7 +20,7 @@ function AuthInner({ googleEnabled }: { googleEnabled: boolean }) {
   const [email, setEmail] = useState(""); const [password, setPassword] = useState(""); const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
   const oauthError = params.get("error");
-  const [error, setError] = useState<string | null>(oauthError ? (oauthError === "OAuthAccountNotLinked" ? "This email already has an account. Log in with your email and password." : oauthError === "AccessDenied" ? "Google sign-in was cancelled or not allowed." : "Sign-in failed. Please try again.") : null);
+  const [error, setError] = useState<string | null>(oauthError ? (oauthError === "OAuthAccountNotLinked" ? "This email already has an account. Log in with your email and password." : oauthError === "Configuration" ? "Google sign-in is not fully set up on the server yet (the site owner needs to set AUTH_SECRET, AUTH_URL and the Google keys). Please use email and password for now." : oauthError === "AccessDenied" ? "Google sign-in was cancelled or not allowed." : "Sign-in failed. Please try again.") : null);
   const signup = mode === "signup";
 
   const submit = async (e: React.FormEvent) => {

@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { logError } from "@/lib/observability";
 import { prisma } from "@/lib/db/prisma";
 import { apiAuth } from "@/lib/auth/guard";
-import { buildDailySession } from "@/lib/workout/engine";
+import { buildDailySession, safePool } from "@/lib/workout/engine";
+import { demandOf, focusGoals, focusLabels, focusWords } from "@/lib/workout/focus";
 import type { PerformanceRecord } from "@/lib/workout/types";
 import { NoSafeExerciseError } from "@/lib/workout/types";
 import { rerankWorkoutCandidates } from "@/lib/ai/workout-rerank";
@@ -54,7 +55,11 @@ async function build(userId: string, reason: string): Promise<Built> {
     const recentIds = [...new Set(performances.filter((p) => p.date >= repeatSince).map((p) => p.exerciseId))];
     const performanceHistory: PerformanceRecord[] = performances.map((p) => ({ exerciseId: p.exerciseId, effort: p.effort as any, completed: p.completed, setsDone: p.setsDone, repsDone: p.repsDone, durationSec: p.durationSec, date: p.date.toISOString().slice(0, 10) }));
     const gymEquipment = (await prisma.profile.findMany({ where: { user: { role: "coach", coachRelations: { some: { athleteId: userId, status: "active" } } } }, select: { equipment: true } })).flatMap((g) => g.equipment);
-    const exercises = await prisma.exercise.findMany({ where: { verified: true }, take: 5000 });
+    const onlyReviewed = (await prisma.appConfig.findUnique({ where: { key: "require_reviewed_exercises" } }))?.value === "true";
+    const exercises = await prisma.exercise.findMany({ where: { verified: true, ...(onlyReviewed ? { safetyReviewed: true } : {}) }, take: 5000 });
+    // The coach's specialty and how demanding they want the work.
+    const coach = await prisma.profile.findFirst({ where: { user: { role: "coach", coachRelations: { some: { athleteId: userId, status: "active" } } } }, select: { fullName: true, focusAreas: true, focusLevel: true } });
+    const coachFocus = coach?.focusAreas ?? [];
 
     const youth = (profile.ageBand || "").startsWith("youth");
     const notes: string[] = []; const extraAvoid: string[] = [];
@@ -76,9 +81,20 @@ async function build(userId: string, reason: string): Promise<Built> {
     if (unwell) { readiness = Math.min(readiness, 40); notes.push("You reported feeling unwell, so today is lighter and easier."); }
     const minutes = Math.min(profile.sessionDurationMin || 35, youth ? 40 : 180);
     const level = levelFor(profile.level, profile.workoutIntensity, youth);
+    const chosenGoals = youth ? ["general_fitness"] : [...new Set([goal, ...(profile.goals ?? []), ...(coachFocus.length ? focusGoals(coachFocus) : [])])].slice(0, 4);
+    const demand = youth ? 0 : demandOf(coach?.focusLevel);
+    if (coach && coachFocus.length) notes.push(`Coach ${coach.fullName || ""} focus: ${focusLabels(coachFocus).join(", ")}${demand ? ` — ${demand === 2 ? "elite" : "demanding"} training standard` : ""}.`);
 
-    const aiPreferred = aiProvider() ? await rerankWorkoutCandidates(exercises as any, { userId, ageBand: profile.ageBand, level, track: profile.track, goal, availableMinutes: minutes, readiness }).catch(() => []) : [];
+    const sessionCtx = {
+      userId, ageBand: profile.ageBand, level, track: profile.track, goal, goals: chosenGoals, focusWords: focusWords(coachFocus), demand,
+      equipment: [...new Set([...(profile.equipment.length ? profile.equipment : ["bodyweight"]), ...gymEquipment])], equipmentExclude: profile.equipmentExclude,
+      injuries: injuries.filter((i) => i.kind !== "illness").map((i) => ({ bodyPart: i.bodyPart, restrictions: i.restrictions ?? undefined, status: i.status })), injuryDataKnown: profile.injuryDataStatus === "known",
+      otherLimitations: profile.otherLimitations, conditions: Array.isArray(profile.healthConditions) ? profile.healthConditions.map(String) : [], isPregnant: profile.isPregnant, extraAvoid,
+    };
+    // The AI sees the person's WHOLE safe pool (in batches), not a sample of the library.
+    const aiPreferred = aiProvider() ? await rerankWorkoutCandidates(safePool(exercises as any, sessionCtx as any), { ...sessionCtx, availableMinutes: minutes, readiness, focusLabels: focusLabels(coachFocus) } as any).catch(() => []) : [];
     const session = buildDailySession(exercises as any, {
+      goals: chosenGoals, focusWords: focusWords(coachFocus), demand,
       userId, ageBand: profile.ageBand, level, track: profile.track, goal,
       equipment: [...new Set([...(profile.equipment.length ? profile.equipment : ["bodyweight"]), ...gymEquipment])], equipmentExclude: profile.equipmentExclude,
       injuries: injuries.filter((i) => i.kind !== "illness").map((i) => ({ bodyPart: i.bodyPart, restrictions: i.restrictions ?? undefined, status: i.status })), injuryDataKnown: profile.injuryDataStatus === "known",
