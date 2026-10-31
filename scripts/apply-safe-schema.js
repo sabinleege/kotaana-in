@@ -68,7 +68,7 @@ END $$`,
   `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM "app_config" WHERE "key" = 'trial_claims_migrated') THEN
     INSERT INTO "trial_claims" ("email", "userId", "role", "startedAt", "endsAt")
       SELECT u."email", u."id", u."role"::text, u."createdAt", u."createdAt" + interval '7 days' FROM "users" u
-      WHERE u."role" = 'athlete' AND u."createdAt" > now() - interval '7 days'
+      WHERE u."role"::text = 'athlete' AND u."createdAt" > now() - interval '7 days'
       ON CONFLICT ("email") DO NOTHING;
     INSERT INTO "app_config" ("key", "value", "updatedAt") VALUES ('trial_claims_migrated', 'true', now());
   END IF; END $$`,
