@@ -62,11 +62,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (normalized === ADMIN_EMAIL && existing.role !== "admin") {
           await prisma.user.update({ where: { id: existing.id }, data: { role: "admin" } });
         }
+        // Keeping the profile's name and photo in step is a convenience: it must never block signing in (for example while a schema update is pending).
         await prisma.profile.upsert({
           where: { userId: existing.id },
           update: { fullName: existing.name || user.name || "", email: normalized, avatarUrl: existing.image || user.image || null },
           create: { userId: existing.id, fullName: existing.name || user.name || "", email: normalized, avatarUrl: existing.image || user.image || null },
-        });
+          select: { userId: true },
+        }).catch((e) => console.error("[auth] could not refresh the profile at sign-in", e));
         return true;
       }
       // A new account has no database row yet: its profile and role are created in events.createUser, right after the adapter saves the user.

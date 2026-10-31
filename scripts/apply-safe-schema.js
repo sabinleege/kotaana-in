@@ -77,10 +77,13 @@ END $$`,
 (async () => {
   if (!process.env.DATABASE_URL) { console.warn("[schema] DATABASE_URL not set — skipping schema update."); return; }
   const db = new PrismaClient();
+  // Each statement is tried on its own, so one failure no longer skips every statement after it.
+  let ok = 0; const failed = [];
   try {
-    for (const sql of STATEMENTS) await db.$executeRawUnsafe(sql);
-    console.log(`[schema] ${STATEMENTS.length} additive statements applied.`);
-  } catch (e) {
-    console.warn("[schema] could not update the database during build:", e && e.message ? e.message : e);
+    for (const sql of STATEMENTS) {
+      try { await db.$executeRawUnsafe(sql); ok++; }
+      catch (e) { failed.push(sql.slice(0, 90)); console.warn("[schema] FAILED:", sql.slice(0, 90), "→", e && e.message ? e.message : e); }
+    }
+    console.log(`[schema] ${ok} of ${STATEMENTS.length} additive statements applied.${failed.length ? " Run `node scripts/apply-safe-schema.js` with DATABASE_URL set to fix the rest." : ""}`);
   } finally { await db.$disconnect().catch(() => {}); }
 })();
