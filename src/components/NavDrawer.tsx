@@ -4,7 +4,14 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Logo } from "./Logo";
 
-export type NavItem = { href: string; label: string; icon: string; badge?: number; exact?: boolean };
+export const SIGN_OUT = "/api/auth/signout";
+
+/** Signing out is a POST so that link prefetching can never end the session by itself. */
+export function SignOutButton({ label = "Sign out", icon, className = "navAction" }: { label?: string; icon?: string; className?: string }) {
+  return <form method="post" action={SIGN_OUT} style={{ margin: 0 }}><button type="submit" className={className}>{icon && <span className="icon">{icon}</span>}{label}</button></form>;
+}
+
+export type NavItem ={ href: string; label: string; icon: string; badge?: number; exact?: boolean };
 
 /** Floating ☰ button, a back button on every inner page, and the slide-in menu shared by the athlete and coach areas. */
 export function NavDrawer({ name, subtitle, items, footer, homeHref }: { name?: string | null; subtitle?: string; items: NavItem[]; footer: NavItem[]; homeHref: string }) {
@@ -17,7 +24,7 @@ export function NavDrawer({ name, subtitle, items, footer, homeHref }: { name?: 
   const unread = all.reduce((s, i) => s + (i.badge || 0), 0);
   const goBack = () => { if (window.history.length > 1) router.back(); else router.push(homeHref); };
   // Close immediately on click so the menu never stays covering the page while the next page loads.
-  const link = (i: NavItem) => <Link key={i.href} href={i.href} className={i.href === activeHref ? "active" : ""} onClick={() => setOpen(false)}><span className="icon">{i.icon}</span>{i.label}{i.badge ? <span className="navBadge">{i.badge}</span> : null}</Link>;
+  const link = (i: NavItem) => i.href === SIGN_OUT ? <SignOutButton key={i.href} label={i.label} icon={i.icon} /> : <Link key={i.href} href={i.href} className={i.href === activeHref ? "active" : ""} onClick={() => setOpen(false)}><span className="icon">{i.icon}</span>{i.label}{i.badge ? <span className="navBadge">{i.badge}</span> : null}</Link>;
   return <>
     <button className="menuBtn" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}>☰{unread > 0 && <span className="menuDot" aria-label={`${unread} unread`} />}</button>
     {path !== homeHref && <button className="backBtn" aria-label="Go back" onClick={goBack}>←</button>}

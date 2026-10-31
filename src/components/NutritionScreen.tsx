@@ -2,6 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 import NutritionPrefsForm from "./setup/NutritionPrefsForm";
 import HydrationTracker from "./HydrationTracker";
+import { PreviewLock } from "./billing/TrialCard";
+import { useT } from "@/lib/i18n/client";
 
 type Alt = { name: string; portion: string; calories: number };
 type Food = { id: string; name: string; servingSize: string | null; calories: number; protein: number; carbs: number; fat: number; grams?: number; alternatives?: Alt[] };
@@ -33,6 +35,8 @@ export default function NutritionScreen() {
   const [plan, setPlan] = useState<Plan | null>(null);
   const [log, setLog] = useState<Log>({ meals: [], totalCalories: 0, totalProtein: 0 });
   const [msg, setMsg] = useState<string | null>(null);
+  const [preview, setPreview] = useState(false);
+  const t = useT();
   const [busy, setBusy] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -42,6 +46,7 @@ export default function NutritionScreen() {
     setBusy(force ? "plan" : null);
     const n = await fetch("/api/nutrition/daily", { method: force ? "POST" : "GET" }).then((r) => r.json()).catch(() => ({ ok: false, error: "Couldn't load nutrition." }));
     setBusy(null);
+    if (n.code === "ACCESS_EXPIRED") { setPreview(true); return; }
     if (!n.ok) { setMsg(n.error); return; }
     setPlan(n.plan); setLog(n.log); if (force) setMsg("New meal plan ready for today.");
   };
@@ -67,6 +72,7 @@ export default function NutritionScreen() {
   const sum = (k: "protein" | "carbs" | "fat") => log.meals.reduce((n, m) => n + (m[k] || 0), 0);
   const logged = (slot: string) => log.meals.find((m) => m.slot === slot);
 
+  if (preview) return <PreviewLock feature={t("preview.nutrition")} />;
   return <div className="stack">
     <div><span className="pill orange">NUTRITION</span><h1 style={{ fontSize: 28, margin: "9px 0 4px" }}>Daily fuel</h1><p className="subtitle">Today's meals with calories, planned for where you live and how you train. Log each one — or snap a photo to check it against the plan.</p></div>
     <input ref={fileRef} type="file" accept="image/*" capture="environment" hidden onChange={onPhoto} />

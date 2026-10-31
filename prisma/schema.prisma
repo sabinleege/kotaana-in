@@ -52,6 +52,7 @@ model User {
   healthUpdates HealthUpdate[]
   athleteReports AthleteReport[]
   questionnaires Questionnaire[]
+  periodSummaries PeriodSummary[]
 
   coachRelations CoachAthleteRelation[] @relation("CoachRelations")
   athleteRelations CoachAthleteRelation[] @relation("AthleteRelations")
@@ -192,6 +193,8 @@ model Profile {
   healthConditions Json @default("[]")
   isPregnant Boolean @default(false)
   pregnancyDueDate DateTime? @db.Date
+  /// How the due date was found, pre-pregnancy weight, twins, doctor clearance, complications and symptoms.
+  pregnancyDetails Json?
   cycleTracking Boolean @default(false)
   cycleLastPeriod DateTime? @db.Date
   cycleLengthDays Int? @default(28)
@@ -209,6 +212,8 @@ model Profile {
   nutritionAdherence Int?
   profession String? @default("office")
   theme String @default("system")
+  /// Interface and AI reply language: "en" or "fr".
+  language String @default("en")
   lastActiveAt DateTime?
   profileHash String?
 
@@ -633,8 +638,12 @@ model AiUsage {
   status String @default("success")
   errorMessage String?
   durationMs Int?
+  /// Model that answered and what the call cost in US dollars (from the provider's reported usage).
+  model String?
+  costUsd Float @default(0)
   createdAt DateTime @default(now())
   @@index([userId, createdAt])
+  @@index([createdAt])
   @@map("ai_usage")
 }
 
@@ -756,4 +765,32 @@ model Questionnaire {
   createdAt DateTime @default(now())
   @@index([userId, kind, createdAt])
   @@map("questionnaires")
+}
+
+/// One free trial per email address, ever. Kept even if the account is deleted, so the trial cannot be claimed twice.
+model TrialClaim {
+  email String @id
+  userId String
+  role String
+  startedAt DateTime @default(now())
+  endsAt DateTime
+  @@map("trial_claims")
+}
+
+/// The compact record kept after a week or month closes: the raw daily rows (check-ins, meals, photos, set-by-set logs) are reduced to these numbers and then deleted.
+model PeriodSummary {
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind String
+  periodStart DateTime @db.Date
+  periodEnd DateTime @db.Date
+  metrics Json
+  summary String @db.Text
+  rowsCompacted Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([userId, kind, periodStart])
+  @@index([userId, kind, periodStart])
+  @@map("period_summaries")
 }

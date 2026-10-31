@@ -10,6 +10,7 @@ const ITEMS: { key: string; label: string; needed: string; vars: string[] }[] = 
   { key: "email", label: "Password-reset emails (Resend)", needed: "Recommended", vars: ["RESEND_API_KEY"] },
   { key: "momo", label: "MoMo live payments", needed: "Optional (manual approval works without it)", vars: ["MOMO_SUBSCRIPTION_KEY", "MOMO_API_USER", "MOMO_API_KEY"] },
   { key: "webhook", label: "MoMo webhook signature", needed: "Required if MoMo is live", vars: ["MOMO_WEBHOOK_SECRET"] },
+  { key: "cron", label: "Daily summaries & data clean-up (scheduler secret)", needed: "Recommended", vars: ["CRON_SECRET"] },
 ];
 
 /** Which settings are in place — names and yes/no only, never the values. */

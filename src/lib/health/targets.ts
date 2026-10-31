@@ -16,7 +16,9 @@ export function bmiCategory(b: number | null) {
 
 export type NutritionTargets = { calories: number; protein: number; carbs: number; fat: number };
 
-type P = { weight?: number | null; height?: number | null; age?: number | null; gender?: string | null; targetCalories?: number | null; primaryGoal?: string | null; trainingDaysPerWeek?: number | null };
+import { pregnancyExtras, pregnancyStatus, readDetails } from "./pregnancy";
+
+type P = { weight?: number | null; height?: number | null; age?: number | null; gender?: string | null; targetCalories?: number | null; primaryGoal?: string | null; trainingDaysPerWeek?: number | null; isPregnant?: boolean | null; pregnancyDueDate?: Date | null; pregnancyDetails?: unknown };
 
 /** Daily calories and macros: the athlete's own calorie target when set, otherwise Mifflin-St Jeor with a training-days activity factor and a goal adjustment. */
 export const isChild = (age?: number | null) => age != null && age < 18;
@@ -31,8 +33,22 @@ function childTargets(p: P): NutritionTargets {
   return { calories, protein, carbs: Math.max(0, Math.round((calories - protein * 4 - fat * 9) / 4)), fat };
 }
 
+/** In pregnancy there is never a weight-loss deficit, needs are based on the pre-pregnancy weight, and the trimester's extra energy and protein are added. */
 export function nutritionTargets(p: P): NutritionTargets | null {
   if (isChild(p.age)) return childTargets(p);
+  if (p.isPregnant) {
+    const info = pregnancyStatus(true, p.pregnancyDueDate, p.pregnancyDetails);
+    const extra = pregnancyExtras(info);
+    const pre = readDetails(p.pregnancyDetails)?.prePregWeightKg ?? p.weight;
+    const base = baseTargets({ ...p, weight: pre, primaryGoal: p.primaryGoal === "fat_loss" ? "general_fitness" : p.primaryGoal, targetCalories: p.targetCalories ?? null });
+    if (!base) return null;
+    const calories = base.calories + extra.kcal; const protein = base.protein + extra.proteinG; const fat = Math.round((calories * 0.3) / 9);
+    return { calories, protein, fat, carbs: Math.max(175, Math.round((calories - protein * 4 - fat * 9) / 4)) };
+  }
+  return baseTargets(p);
+}
+
+function baseTargets(p: P): NutritionTargets | null {
   let calories = p.targetCalories ?? null;
   if (!calories) {
     if (!p.weight || !p.height || !p.age) return null;

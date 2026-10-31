@@ -1,1 +1,12 @@
-import {requireRole} from '@/lib/auth/guard';import {prisma} from '@/lib/db/prisma';import PaymentApprovals from '@/components/PaymentApprovals';export const dynamic='force-dynamic';export default async function AdminPayments(){await requireRole('admin');const rows=await prisma.paymentRequest.findMany({where:{status:'pending'},include:{user:{select:{name:true,email:true}}},orderBy:{createdAt:'desc'}});return <div className="page"><div className="mobile" style={{padding:'24px 0'}}><PaymentApprovals rows={rows} back="/admin"/></div></div>}
+import { prisma } from "@/lib/db/prisma";
+import PaymentApprovals from "@/components/PaymentApprovals";
+import { AdminHeader } from "@/components/admin/AdminUI";
+
+export const dynamic = "force-dynamic";
+export default async function AdminPayments() {
+  const rows = await prisma.paymentRequest.findMany({ where: { status: "pending" }, include: { user: { select: { name: true, email: true } } }, orderBy: { createdAt: "desc" } });
+  return <>
+    <AdminHeader eyebrow="Payments" title="Payment approvals" sub={rows.length ? `${rows.length} waiting. Confirm only after the MoMo money has arrived.` : "Nothing is waiting for confirmation."} />
+    <div className="admPayments"><PaymentApprovals rows={rows} back="/admin" embedded /></div>
+  </>;
+}

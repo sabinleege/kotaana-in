@@ -11,13 +11,14 @@ import { paywallResponse } from "@/lib/access";
 import { takeUsage } from "@/lib/usage";
 import { favoriteFoods } from "@/lib/nutrition/preferences";
 import { isChild } from "@/lib/health/targets";
+import { isLang } from "@/lib/i18n/dict";
 
 const dateOnly = (d: Date) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 const loadProfile = (userId: string) => prisma.profile.findUnique({ where: { userId } });
 type Profile = NonNullable<Awaited<ReturnType<typeof loadProfile>>>;
 
 /** A cached plan is reused until the athlete changes anything that feeds it. */
-const prefsKey = (p: Profile) => JSON.stringify([p.primaryGoal, p.dietaryStyle, p.allergies, p.targetCalories, p.weight, p.height, p.mealsPerDay, p.culturalRestrictions, p.healthConditions, p.isPregnant, p.locationCountry, p.locationCity, p.trainingDaysPerWeek]);
+const prefsKey = (p: Profile) => JSON.stringify([p.primaryGoal, p.dietaryStyle, p.allergies, p.targetCalories, p.weight, p.height, p.mealsPerDay, p.culturalRestrictions, p.healthConditions, p.isPregnant, p.pregnancyDueDate, p.pregnancyDetails, p.locationCountry, p.locationCity, p.trainingDaysPerWeek, p.language]);
 
 async function generate(userId: string, profile: Profile, today: Date): Promise<DailyFoodPlan> {
   const conditions = Array.isArray(profile.healthConditions) ? profile.healthConditions.map(String) : [];
@@ -38,6 +39,7 @@ async function generate(userId: string, profile: Profile, today: Date): Promise<
   const temp = weather?.temperatureC;
   const trainsToday = (await prisma.workoutPlan.count({ where: { userId, date: today, isActive: true } })) > 0;
   const ai = await aiDailyFoodPlan({
+    userId, lang: isLang(profile.language) ? profile.language : "en",
     country: profile.locationCountry, city: profile.locationCity, climate: temp == null ? "unknown" : temp >= 28 ? "hot" : temp <= 12 ? "cold" : "mild",
     dietaryStyle: profile.dietaryStyle, allergies: profile.allergies, culturalRestrictions: profile.culturalRestrictions,
     healthNotes: [...new Set(rules.map((r) => r.nutritionNote).filter(Boolean) as string[])], avoidFoods: rules.map((r) => r.avoidFoods).filter(Boolean) as RegExp[],

@@ -35,7 +35,7 @@ export async function POST(req: Request) {
   if (!inj || inj.athleteId !== userId) return NextResponse.json({ error: "Not found." }, { status: 404 });
   const now = new Date();
   const elapsed = Math.max(0, Math.floor((now.getTime() - inj.dateReported.getTime()) / 86400000));
-  const photo = d.image && !d.doctorDays ? await assessPhoto(d.image, inj.kind === "illness" ? `a person recovering from ${inj.injuryType}` : `a healing injury: ${inj.injuryType} on the ${inj.bodyPart}`, inj.severity) : null;
+  const photo = d.image && !d.doctorDays ? await assessPhoto(d.image, inj.kind === "illness" ? `a person recovering from ${inj.injuryType}` : `a healing injury: ${inj.injuryType} on the ${inj.bodyPart}`, inj.severity, userId) : null;
 
   let est = inj.estimatedDays ?? progressOf(inj, now).daysLeft + elapsed;
   let source = inj.estimateSource;

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { ACTIVITY_OPTIONS, ALCOHOL_OPTIONS, CHRONIC_CONDITIONS, SMOKING_OPTIONS } from "@/lib/health/conditions";
+import PregnancyCard from "./PregnancyCard";
 
 export default function HealthScreen() {
   const [check, setCheck] = useState<any>({ energy: 3, soreness: 1, mood: 3, feeling: "ok", sleepHours: 8 });
@@ -51,7 +52,6 @@ export default function HealthScreen() {
       healthConditions: conditions, chronicDiseases: profile.chronicDiseases || null, medications: profile.medications || null, pastSurgeries: profile.pastSurgeries || null,
       painAreas: profile.painAreas || null, otherLimitations: profile.otherLimitations || null, heartRate: profile.heartRate ?? null,
       smokingStatus: profile.smokingStatus || null, alcoholUse: profile.alcoholUse || null, stressLevel: profile.stressLevel ?? null, profession: profile.profession || null,
-      isPregnant: Boolean(profile.isPregnant), pregnancyDueDate: profile.isPregnant && profile.pregnancyDueDate ? String(profile.pregnancyDueDate).slice(0, 10) : null,
       injuryDataStatus: injuryStatus,
     }) });
     const d = await r.json(); setMsg(r.ok ? "Health profile saved. Your next workout and meal plan will use it." : d.error);
@@ -61,6 +61,7 @@ export default function HealthScreen() {
   return <div className="stack">
     <div><span className="pill orange">HEALTH</span><h1 style={{ fontSize: 28, margin: "9px 0 4px" }}>Health & recovery</h1><p className="subtitle">Health data stays here and directly informs safe workout generation.</p></div>
     {msg && <div className="card small">{msg}</div>}
+    {profile && profile.gender !== "male" && <PregnancyCard key={String(profile.updatedAt)} profile={profile} onSaved={() => void load()} />}
     <div className="card">
       <h2 className="sectionTitle">Daily readiness</h2>
       <div className="grid grid2" style={{ marginTop: 12 }}>
@@ -104,10 +105,6 @@ export default function HealthScreen() {
         <Choice label="Alcohol" value={profile.alcoholUse} options={ALCOHOL_OPTIONS} set={(v) => setProfile({ ...profile, alcoholUse: v })}/>
         <Choice label="Usual stress level" value={profile.stressLevel == null ? "" : String(profile.stressLevel)} options={[["1", "1 — very low"], ["2", "2 — low"], ["3", "3 — moderate"], ["4", "4 — high"], ["5", "5 — very high"]]} set={(v) => setProfile({ ...profile, stressLevel: v ? Number(v) : null })}/>
         <Choice label="Daily activity at work" value={profile.profession} options={ACTIVITY_OPTIONS} set={(v) => setProfile({ ...profile, profession: v })}/>
-      </div>
-      <div className="stack" style={{ marginTop: 12, gap: 8 }}>
-        <label className="check"><input type="checkbox" checked={Boolean(profile.isPregnant)} onChange={(e) => setProfile({ ...profile, isPregnant: e.target.checked })}/> I am currently pregnant</label>
-        {profile.isPregnant && <div style={{ maxWidth: 260 }}><label className="label">Due date</label><input className="input" type="date" value={profile.pregnancyDueDate ? String(profile.pregnancyDueDate).slice(0, 10) : ""} onChange={(e) => setProfile({ ...profile, pregnancyDueDate: e.target.value || null })}/></div>}
       </div>
       <button className="btn primary" style={{ marginTop: 14 }} onClick={saveHealth}>Save health profile</button>
     </div>}

@@ -45,7 +45,7 @@ export async function POST(req: Request) {
       const cap = await takeUsage(userId, "meal_photo");
       if (!cap.ok) return NextResponse.json({ error: `You've checked ${cap.limit} meal photos today — that's the daily limit. You can still log meals without a photo.`, code: "DAILY_LIMIT" }, { status: 429 });
       try {
-        const raw = await aiVision(`You check meal photos for a nutrition app. The athlete was planned to eat: ${meal.foods.map((f) => `${f.name} (${f.servingSize || "1 serving"})`).join(", ")}. Look at the photo. Return {"isFood":boolean,"match":"yes"|"partly"|"no","seen":string[],"estimatedCalories":number,"comment":string} where match says whether the plate reasonably corresponds to the plan, and estimatedCalories is your estimate of what is on the plate.`, { mimeType: m[1], base64: m[2] });
+        const raw = await aiVision(`You check meal photos for a nutrition app. The athlete was planned to eat: ${meal.foods.map((f) => `${f.name} (${f.servingSize || "1 serving"})`).join(", ")}. Look at the photo. Return {"isFood":boolean,"match":"yes"|"partly"|"no","seen":string[],"estimatedCalories":number,"comment":string} where match says whether the plate reasonably corresponds to the plan, and estimatedCalories is your estimate of what is on the plate.`, { mimeType: m[1], base64: m[2] }, { userId, feature: "meal_photo" });
         if (!raw) { e.status = "unchecked"; e.note = "Photo could not be checked automatically — logged as planned."; message = `${meal.name} logged. Photo checking is not available right now, so it was logged as planned.`; }
         else {
           const v = JSON.parse(clean(raw));

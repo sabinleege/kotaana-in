@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { apiAuth } from "@/lib/auth/guard";
 import { ACTIVITY_OPTIONS, ALCOHOL_OPTIONS, CHRONIC_CONDITIONS, SMOKING_OPTIONS } from "@/lib/health/conditions";
+import { dueDateFrom, pregnancyDetailsSchema } from "@/lib/health/pregnancy";
 
 const schema=z.object({
  fullName:z.string().trim().min(2).max(80).optional(),
@@ -47,6 +49,8 @@ const schema=z.object({
  healthConditions:z.array(z.enum(CHRONIC_CONDITIONS.map(c=>c.id) as [string,...string[]])).max(CHRONIC_CONDITIONS.length).optional(),
  isPregnant:z.boolean().optional(),
  pregnancyDueDate:z.string().date().nullable().optional(),
+ pregnancyDetails:pregnancyDetailsSchema.nullable().optional(),
+ language:z.enum(["en","fr"]).optional(),
  heartRate:z.number().int().min(30).max(220).nullable().optional(),
  smokingStatus:z.enum(SMOKING_OPTIONS.map(o=>o[0]) as [string,...string[]]).nullable().optional(),
  alcoholUse:z.enum(ALCOHOL_OPTIONS.map(o=>o[0]) as [string,...string[]]).nullable().optional(),
@@ -62,8 +66,11 @@ export async function PATCH(req:Request){const a=await apiAuth();if("error" in a
  const dobAge = suppliedDob && !Number.isNaN(suppliedDob.getTime()) ? Math.max(0, Math.floor((Date.now() - suppliedDob.getTime()) / (365.2425*86400000))) : undefined;
  const age = parsed.data.age ?? dobAge;
  const derivedAgeBand = age == null ? undefined : age < 12 ? "youth_u12" : age < 14 ? "youth_u14" : age < 17 ? "youth_u17" : age >= 65 ? "masters" : "adult";
- const dueDate = parsed.data.pregnancyDueDate ? new Date(`${parsed.data.pregnancyDueDate}T00:00:00.000Z`) : parsed.data.pregnancyDueDate;
- const data = {...parsed.data, ...(dueDate !== undefined ? {pregnancyDueDate:dueDate} : {}), ...(suppliedDob ? {dateOfBirth:suppliedDob} : {}), ...(age != null ? {age} : {}), ...(derivedAgeBand ? {ageBand: derivedAgeBand} : {}), ...(parsed.data.tosAccepted ? {tosAcceptedAt: now} : {}), ...(parsed.data.dataConsent ? {dataConsentAt: now} : {}), ...(parsed.data.medicalDisclaimerAccepted ? {medicalDisclaimerAcceptedAt: now} : {})};
+ const givenDue = parsed.data.pregnancyDueDate ? new Date(`${parsed.data.pregnancyDueDate}T00:00:00.000Z`) : parsed.data.pregnancyDueDate;
+ // The due date is worked out on the server from the last period or the scan when that is how the person dated the pregnancy.
+ const dueDate = parsed.data.pregnancyDetails && parsed.data.pregnancyDetails.method !== "due" ? dueDateFrom(parsed.data.pregnancyDetails, givenDue instanceof Date ? givenDue : null) : givenDue;
+ const { pregnancyDetails, ...fields } = parsed.data;
+ const data = {...fields, ...(pregnancyDetails !== undefined ? {pregnancyDetails: pregnancyDetails === null ? Prisma.DbNull : pregnancyDetails} : {}), ...(dueDate !== undefined ? {pregnancyDueDate:dueDate} : {}), ...(suppliedDob ? {dateOfBirth:suppliedDob} : {}), ...(age != null ? {age} : {}), ...(derivedAgeBand ? {ageBand: derivedAgeBand} : {}), ...(parsed.data.tosAccepted ? {tosAcceptedAt: now} : {}), ...(parsed.data.dataConsent ? {dataConsentAt: now} : {}), ...(parsed.data.medicalDisclaimerAccepted ? {medicalDisclaimerAcceptedAt: now} : {})};
  const p=await prisma.profile.upsert({where:{userId:a.session.user.id},create:{userId:a.session.user.id,fullName:a.session.user.name||"",email:a.session.user.email,...data},update:data});await prisma.user.update({where:{id:a.session.user.id},data:{name:p.fullName,image:p.avatarUrl||undefined}});
  if(parsed.data.weight!=null){const last=await prisma.weightHistory.findFirst({where:{userId:a.session.user.id},orderBy:{recordedAt:"desc"}});if(last?.weight!==parsed.data.weight)await prisma.weightHistory.create({data:{userId:a.session.user.id,weight:parsed.data.weight,weekLabel:now.toISOString().slice(0,10)}});}
  return NextResponse.json({ok:true,profile:p});}

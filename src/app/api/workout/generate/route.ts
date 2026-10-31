@@ -10,7 +10,8 @@ import { rerankWorkoutCandidates } from "@/lib/ai/workout-rerank";
 import { aiProvider } from "@/lib/ai/router";
 import { paywallResponse } from "@/lib/access";
 import { refundUsage, takeUsage, usageToday } from "@/lib/usage";
-import { fitnessStatus, pregnancyInfo } from "@/lib/health/fitness";
+import { fitnessStatus } from "@/lib/health/fitness";
+import { pregnancyStatus, pregnancyWorkout } from "@/lib/health/pregnancy";
 import { bmiOf } from "@/lib/health/targets";
 
 const dateOnly = (d: Date) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
@@ -74,10 +75,11 @@ async function build(userId: string, reason: string): Promise<Built> {
     // A BMI of 30 or more gets a joint-friendly session, as if the athlete had ticked obesity in their health profile.
     const bmi = bmiOf(profile.weight, profile.height);
     if (bmi != null && bmi >= 30 && !youth) { extraAvoid.push("jump", "sprint", "burpee", "plyo", "skipping"); notes.push("Joint-friendly session: high-impact moves are replaced with low-impact options."); }
-    const preg = pregnancyInfo(profile.isPregnant, profile.pregnancyDueDate, now);
-    if (preg && (preg.trimester ?? 1) >= 2) { extraAvoid.push("supine", "lying", "flat bench", "bench press", "sit up", "crunch"); notes.push(`Pregnancy week ${preg.week}: no lying flat on your back, no crunches; keep to a pace where you can talk.`); }
+    const pregPlan = pregnancyWorkout(pregnancyStatus(profile.isPregnant, profile.pregnancyDueDate, profile.pregnancyDetails, now));
+    extraAvoid.push(...pregPlan.avoid); notes.push(...pregPlan.notes);
     const unwell = fit.items.some((i) => i.kind === "illness") || checkin.feeling === "sick" || checkin.feeling === "off";
     let readiness = checkin.readiness;
+    if (pregPlan.readinessCap != null) readiness = Math.min(readiness, pregPlan.readinessCap);
     if (unwell) { readiness = Math.min(readiness, 40); notes.push("You reported feeling unwell, so today is lighter and easier."); }
     const minutes = Math.min(profile.sessionDurationMin || 35, youth ? 40 : 180);
     const level = levelFor(profile.level, profile.workoutIntensity, youth);
@@ -102,7 +104,7 @@ async function build(userId: string, reason: string): Promise<Built> {
       trainingDays: profile.trainingDays, availableMinutes: minutes, aiPreferredExerciseIds: aiPreferred, location: profile.locationLat != null && profile.locationLng != null ? { lat: profile.locationLat, lng: profile.locationLng, city: profile.locationCity || undefined, country: profile.locationCountry || undefined } : null,
       recentExerciseIds: recentIds, recentMuscleTags: recentMuscles.flatMap((x) => [x.muscleGroup, x.target, ...x.secondaryMuscles]).filter(Boolean) as string[], recentMovementPatterns: recentMuscles.map((x) => x.movementPattern).filter(Boolean) as string[],
       weeklyMuscleTags: weeklyExercises.flatMap((x) => [x.muscleGroup, x.target, ...x.secondaryMuscles]).filter(Boolean) as string[], weeklyMovementPatterns: weeklyExercises.map((x) => x.movementPattern).filter(Boolean) as string[],
-      performanceHistory, missedSessions, dayOfWeek: now.getDay(), readiness, extraAvoid, extraNotes: notes, effortCap: unwell ? "easy" : undefined,
+      performanceHistory, missedSessions, dayOfWeek: now.getDay(), readiness, extraAvoid, extraNotes: notes, effortCap: unwell ? "easy" : pregPlan.cap,
     }, now);
     const version = (await prisma.workoutPlan.count({ where: { userId, date: today } })) + 1;
     const saved = await prisma.$transaction(async (tx) => {

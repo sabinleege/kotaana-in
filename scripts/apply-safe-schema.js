@@ -53,6 +53,25 @@ END $$`,
   `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "receiptEmails" BOOLEAN NOT NULL DEFAULT true`,
   // Coaches now accept athletes automatically, so requests that were waiting become active connections.
   `UPDATE "coach_athlete_relations" SET "status" = 'active' WHERE "status" = 'pending'`,
+  // Free trial claimed once per email, AI cost per call, compact weekly/monthly summaries, language, pregnancy details.
+  `CREATE TABLE IF NOT EXISTS "trial_claims" ("email" TEXT NOT NULL, "userId" TEXT NOT NULL, "role" TEXT NOT NULL, "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "endsAt" TIMESTAMP(3) NOT NULL, CONSTRAINT "trial_claims_pkey" PRIMARY KEY ("email"))`,
+  `ALTER TABLE "ai_usage" ADD COLUMN IF NOT EXISTS "model" TEXT`,
+  `ALTER TABLE "ai_usage" ADD COLUMN IF NOT EXISTS "costUsd" DOUBLE PRECISION NOT NULL DEFAULT 0`,
+  `CREATE INDEX IF NOT EXISTS "ai_usage_createdAt_idx" ON "ai_usage"("createdAt")`,
+  `CREATE TABLE IF NOT EXISTS "period_summaries" ("id" TEXT NOT NULL, "userId" TEXT NOT NULL, "kind" TEXT NOT NULL, "periodStart" DATE NOT NULL, "periodEnd" DATE NOT NULL, "metrics" JSONB NOT NULL, "summary" TEXT NOT NULL, "rowsCompacted" INTEGER NOT NULL DEFAULT 0, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "period_summaries_pkey" PRIMARY KEY ("id"))`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "period_summaries_userId_kind_periodStart_key" ON "period_summaries"("userId", "kind", "periodStart")`,
+  `CREATE INDEX IF NOT EXISTS "period_summaries_userId_kind_periodStart_idx" ON "period_summaries"("userId", "kind", "periodStart")`,
+  `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'period_summaries_userId_fkey') THEN ALTER TABLE "period_summaries" ADD CONSTRAINT "period_summaries_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE; END IF; END $$`,
+  `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "language" TEXT NOT NULL DEFAULT 'en'`,
+  `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "pregnancyDetails" JSONB`,
+  // One time only: the trial used to start automatically at sign-up. Athletes still inside that window keep it as their one trial.
+  `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM "app_config" WHERE "key" = 'trial_claims_migrated') THEN
+    INSERT INTO "trial_claims" ("email", "userId", "role", "startedAt", "endsAt")
+      SELECT u."email", u."id", u."role"::text, u."createdAt", u."createdAt" + interval '7 days' FROM "users" u
+      WHERE u."role" = 'athlete' AND u."createdAt" > now() - interval '7 days'
+      ON CONFLICT ("email") DO NOTHING;
+    INSERT INTO "app_config" ("key", "value", "updatedAt") VALUES ('trial_claims_migrated', 'true', now());
+  END IF; END $$`,
 ];
 
 (async () => {

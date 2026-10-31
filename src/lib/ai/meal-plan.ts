@@ -1,6 +1,7 @@
 import { aiText } from "./router";
 import { allergySafe, dietarySafe, norm, type DailyFoodPlan, type PlanMeal } from "@/lib/nutrition/engine";
 import type { Food } from "@prisma/client";
+import { aiLanguageRule, type Lang } from "@/lib/i18n/dict";
 
 export type MealPlanContext = {
   country?: string | null; city?: string | null; climate: string;
@@ -12,6 +13,8 @@ export type MealPlanContext = {
   favorites?: string[];
   /** Age in years when under 18, so the plan stays growth-friendly. */
   childAge?: number | null;
+  /** Whose AI budget pays, and the language for meal names and notes. */
+  userId?: string; lang?: Lang;
 };
 
 const SYSTEM = "You are a registered-dietitian style meal planner inside the Kotaana fitness app. Plan one day of real, affordable food that people in the stated region can actually buy and cook, using local staples and dishes where the region is known. Respect every allergy, dietary style and health note. Give honest calorie and macro estimates. Reply with JSON only. Never give medical diagnoses.";
@@ -40,7 +43,7 @@ export async function aiDailyFoodPlan(ctx: MealPlanContext): Promise<{ meals: Pl
     favouritesRule: ctx.favorites?.length ? "Use some of foodsThisPersonOftenEats where they suit the targets, but keep the day varied." : undefined,
     growingChild: ctx.childAge != null ? `This is a growing ${ctx.childAge >= 13 ? "teenager" : "child"} aged ${ctx.childAge}. Do NOT restrict calories, do not use diet or low-fat products, never give weight-loss advice, and include milk/dairy or alternatives plus iron- and calcium-rich foods.` : undefined,
   });
-  const raw = await aiText(prompt, { system: SYSTEM, temperature: 0.6 }).catch(() => null);
+  const raw = await aiText(prompt, { system: SYSTEM + aiLanguageRule(ctx.lang ?? "en"), temperature: 0.6, userId: ctx.userId, feature: "meal_plan" }).catch(() => null);
   if (!raw) return null;
   let parsed: any;
   try { parsed = JSON.parse(raw.replace(/^```(?:json)?|```$/g, "").trim()); } catch { return null; }

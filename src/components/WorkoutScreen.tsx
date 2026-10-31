@@ -3,6 +3,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import ExerciseDemo from "./ExerciseDemo";
 import { equipmentOptions } from "./setup/WorkoutSetupForm";
 import { cue, getCueMode, setCueMode, type CueMode } from "@/lib/cues";
+import { PreviewLock } from "./billing/TrialCard";
+import { useT } from "@/lib/i18n/client";
 
 type Session = { sessionId: string; estimatedMinutes: number; outdoor: boolean; moves: Array<any>; meta: any; postWorkoutFoodHint: string };
 type Answers = { outdoorTrainingOk: boolean; workoutIntensity: "easy" | "moderate" | "hard"; primaryGoal: string; goals: string[]; sessionDurationMin: number; equipment: string[] };
@@ -28,6 +30,8 @@ export default function WorkoutScreen() {
   const [started, setStarted] = useState(false);
   const [done, setDone] = useState<Record<string, string>>({});
   const [checkout, setCheckout] = useState(false);
+  const [preview, setPreview] = useState(false);
+  const t = useT();
   const [finished, setFinished] = useState<string | null>(null);
   const [cueMode, setMode] = useState<CueMode>("both");
   const autoStart = useRef(false);
@@ -35,7 +39,7 @@ export default function WorkoutScreen() {
   const load = useCallback(async () => {
     const [w, p] = await Promise.all([fetch("/api/workout/generate").then((r) => r.json()), fetch("/api/profile").then((r) => r.json())]).catch(() => [null, null] as any);
     if (!w) { setMsg("Couldn't load your workout."); setLoaded(true); return; }
-    if (w.code === "ACCESS_EXPIRED") { window.location.href = "/app/settings/subscription?expired=1"; return; }
+    if (w.code === "ACCESS_EXPIRED") { setPreview(true); setLoaded(true); return; }
     setSession(w.session); setState({ needsCheckin: Boolean(w.needsCheckin), stale: Boolean(w.stale), rest: Boolean(w.rest), fitness: w.fitness ?? null, usage: w.usage ?? null, error: w.error });
     if (p?.profile) { setProfile(p.profile); setAns(fromProfile(p.profile)); }
     setLoaded(true);
@@ -50,7 +54,7 @@ export default function WorkoutScreen() {
 
   const begin = useCallback(async () => {
     const r = await fetch("/api/workout/start", { method: "POST" }).catch(() => null);
-    if (r?.status === 402) { window.location.href = "/app/settings/subscription?expired=1"; return; }
+    if (r?.status === 402) { setPreview(true); return; }
     setStarted(true); setAsking(false); setFinished(null); cue("done");
   }, []);
   useEffect(() => { if (loaded && session && autoStart.current) { autoStart.current = false; void begin(); } }, [loaded, session, begin]);
@@ -81,6 +85,7 @@ export default function WorkoutScreen() {
   };
 
   if (!loaded) return <div className="card">Loading your workout…</div>;
+  if (preview) return <PreviewLock feature={t("preview.workout")} />;
   const set = (patch: Partial<Answers>) => ans && setAns({ ...ans, ...patch });
   const moves = session ? session.moves : [];
   const trackable = moves.filter((m: any) => m.role !== "hydration");

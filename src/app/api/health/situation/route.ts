@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     const type = kind === "illness" ? (p.data.illness!.symptoms.join(", ") + (p.data.illness!.fever ? ", fever" : "")) : p.data.injury!.type;
     const bodyPart = kind === "illness" ? "Whole body" : p.data.injury!.bodyPart;
     const severity = kind === "illness" && p.data.illness!.fever ? Math.max(3, d.severity) : d.severity;
-    const photo = d.image && !d.doctorDays ? await assessPhoto(d.image, kind === "illness" ? `a person who feels unwell (${type})` : `an injury: ${type} on the ${bodyPart}`, severity) : null;
+    const photo = d.image && !d.doctorDays ? await assessPhoto(d.image, kind === "illness" ? `a person who feels unwell (${type})` : `an injury: ${type} on the ${bodyPart}`, severity, userId) : null;
     const est = estimateRecovery({ kind, type, severity, doctorDays: d.doctorDays, photoFactor: photo?.factor });
     if (photo?.seeDoctor) seeDoctor = true;
     const days = Math.max(1, est.days - d.sinceDays);

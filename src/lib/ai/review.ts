@@ -4,6 +4,10 @@ import { logError } from "@/lib/observability";
 import { fitnessStatus } from "@/lib/health/fitness";
 import { nutritionTargets } from "@/lib/health/targets";
 import { favoriteFoods } from "@/lib/nutrition/preferences";
+import { aiBudget } from "./budget";
+import { aiLanguageRule } from "@/lib/i18n/dict";
+import { userLang } from "@/lib/i18n/server";
+import { summaryContext } from "@/lib/summaries";
 
 const DAY = 86400000;
 const dateOnly = (d: Date) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
@@ -69,13 +73,15 @@ function clean(v: unknown, max = 6): string[] { return Array.isArray(v) ? v.map(
 /** Writes (and saves) a review. The larger model is tried first, then the standard model, then the plain rules. */
 export async function generateReview(userId: string, kind: ReviewKind) {
   const days = kind === "monthly" ? 30 : 7;
-  const m = await gatherMetrics(userId, days);
+  const [m, budget, lang, history] = await Promise.all([gatherMetrics(userId, days), aiBudget(userId), userLang(userId), summaryContext(userId)]);
   let body: ReviewBody | null = null; let source = "rules";
-  const prompt = JSON.stringify({ task: kind === "monthly" ? "Write the monthly review: what changed this month, what to change in the plan, and which of the person's saved details (weight, target, training days, level, goal) look out of date." : "Write the 3–7 day review of how this person is doing and what to adjust next.", reply: { summary: "3-4 sentences", wins: ["up to 4"], concerns: ["up to 4"], suggestions: ["up to 5 concrete changes to training, food, rest or goal"] }, data: m });
-  // Larger review models, best first: your own choice, NVIDIA Nemotron Ultra, DeepSeek R1, then the everyday model.
-  for (const model of [...new Set([process.env.OPENROUTER_REVIEW_MODEL, "nvidia/llama-3.1-nemotron-ultra-253b-v1", "deepseek/deepseek-r1"].filter(Boolean) as string[]), undefined]) {
+  // history: the compact weekly and monthly summaries kept after raw data is cleaned up, so the model sees the long-term trend in a few hundred tokens.
+  const prompt = JSON.stringify({ task: kind === "monthly" ? "Write the monthly review: what changed this month, what to change in the plan, and which of the person's saved details (weight, target, training days, level, goal) look out of date. Use history to compare with earlier weeks and months and to predict the next month." : "Write the 3–7 day review of how this person is doing and what to adjust next. Use history to compare with earlier weeks.", reply: { summary: "3-4 sentences", wins: ["up to 4"], concerns: ["up to 4"], suggestions: ["up to 5 concrete changes to training, food, rest or goal"] }, data: m, history });
+  // Larger review models, best first: your own choice, NVIDIA Nemotron Ultra, DeepSeek R1, then the everyday model. With little AI credit left today only the everyday model is tried.
+  const larger = budget.tight ? [] : [...new Set([process.env.OPENROUTER_REVIEW_MODEL, "nvidia/llama-3.1-nemotron-ultra-253b-v1", "deepseek/deepseek-r1"].filter(Boolean) as string[])];
+  for (const model of budget.exhausted ? [] : [...larger, undefined]) {
     try {
-      const raw = await aiText(prompt, { system: SYSTEM, temperature: 0.3, model });
+      const raw = await aiText(prompt, { system: SYSTEM + aiLanguageRule(lang), temperature: 0.3, model, userId, feature: kind === "monthly" ? "monthly_review" : "review" });
       const json = raw?.match(/\{[\s\S]*\}/)?.[0];
       if (!json) continue;
       const v = JSON.parse(json);

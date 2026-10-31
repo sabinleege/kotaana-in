@@ -10,10 +10,10 @@ export const parseImage = (dataUrl?: string | null) => {
 export type PhotoAssessment = { factor: number; note: string; seeDoctor: boolean };
 
 /** A cautious look at a progress photo (wound, swelling, visible illness). It adjusts the recovery estimate a little and can say "please see a doctor"; it never diagnoses. Returns null when no vision model is configured. */
-export async function assessPhoto(dataUrl: string, what: string, reportedSeverity: number): Promise<PhotoAssessment | null> {
+export async function assessPhoto(dataUrl: string, what: string, reportedSeverity: number, userId?: string): Promise<PhotoAssessment | null> {
   const img = parseImage(dataUrl); if (!img) return null;
   try {
-    const raw = await aiVision(`You help an athlete track recovery. The photo shows: ${what}. The athlete rated it ${reportedSeverity} out of 5. Do NOT diagnose. Return {"visibleSeverity":1-5,"stage":"fresh"|"healing"|"mostly_healed"|"worrying"|"unclear","note":"one short, kind sentence about what is visible and what to watch","seeDoctor":boolean}. Set seeDoctor true only for signs such as spreading redness, pus, heavy swelling, deformity or severe bruising.`, img);
+    const raw = await aiVision(`You help an athlete track recovery. The photo shows: ${what}. The athlete rated it ${reportedSeverity} out of 5. Do NOT diagnose. Return {"visibleSeverity":1-5,"stage":"fresh"|"healing"|"mostly_healed"|"worrying"|"unclear","note":"one short, kind sentence about what is visible and what to watch","seeDoctor":boolean}. Set seeDoctor true only for signs such as spreading redness, pus, heavy swelling, deformity or severe bruising.`, img, { userId, feature: "health_photo" });
     if (!raw) return null;
     const v = JSON.parse(raw.replace(/^```(?:json)?|```$/g, "").trim());
     const visible = Math.max(1, Math.min(5, Math.round(Number(v.visibleSeverity) || reportedSeverity)));

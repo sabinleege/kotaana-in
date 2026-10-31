@@ -1,4 +1,5 @@
 import { aiText } from "./router";
+import { affordableCalls, costOf, estimateTokens } from "./budget";
 import type { ExerciseRow, UserWorkoutContext } from "@/lib/workout/types";
 
 const BATCH = 160;
@@ -9,12 +10,17 @@ const SYSTEM = "You are a constrained Kotaana fitness personalization layer. You
 export async function rerankWorkoutCandidates(safe: ExerciseRow[], ctx: UserWorkoutContext & { goals?: string[]; focusLabels?: string[] }) {
   const batches: ExerciseRow[][] = [];
   for (let i = 0; i < safe.length && batches.length < MAX_BATCHES; i += BATCH) batches.push(safe.slice(i, i + BATCH));
+  // Only as many batches as today's AI credit allows (each batch is costed before it is sent); the rest of the pool still competes on the rule-based score.
+  if (ctx.userId && batches.length) {
+    const est = await costOf(process.env.OPENROUTER_MODEL || "deepseek/deepseek-chat-v3.1", estimateTokens(JSON.stringify(batches[0].map((e) => ({ id: e.id, n: e.name, eq: e.equipment, t: e.target, d: e.difficulty })))) + 300, 80);
+    batches.splice(await affordableCalls(ctx.userId, est, batches.length));
+  }
   const user = { ageBand: ctx.ageBand || "unknown", level: ctx.level || "beginner", track: ctx.track || "general", goals: ctx.goals?.length ? ctx.goals : [ctx.goal || "general_fitness"], coachSpecialty: ctx.focusLabels?.length ? ctx.focusLabels : undefined, availableMinutes: ctx.availableMinutes || 35, readiness: ctx.readiness || 70 };
   const results = await Promise.all(batches.map(async (b) => {
     const allowed = new Set(b.map((e) => e.id));
     const prompt = JSON.stringify({ task: "Return {\"preferredExerciseIds\":string[]} with the 6 IDs from candidates that best fit this user's goals and coach specialty today. Choose ONLY IDs from candidates. Do not judge medical safety; the application already filtered for safety.", user, candidates: b.map((e) => ({ id: e.id, n: e.name, eq: e.equipment, t: e.target, d: e.difficulty })) });
     try {
-      const raw = await aiText(prompt, { system: SYSTEM });
+      const raw = await aiText(prompt, { system: SYSTEM, userId: ctx.userId, feature: "workout_rerank" });
       const json = raw?.match(/\{[\s\S]*\}/)?.[0]; if (!json) return [] as string[];
       const d = JSON.parse(json);
       return Array.isArray(d.preferredExerciseIds) ? d.preferredExerciseIds.filter((x: unknown): x is string => typeof x === "string" && allowed.has(x)).slice(0, 6) : [];

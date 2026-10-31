@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { ProgressChart } from "./charts/ProgressCharts";
 import HydrationTracker from "./HydrationTracker";
 import TodayCard from "./TodayCard";
+import { PreviewLock } from "./billing/TrialCard";
+import { useT } from "@/lib/i18n/client";
 import { FitnessCard, NotificationsCard, QuestionnaireCard, ReviewCard, type Fitness } from "./HealthPanels";
 
 type Rating = { label: string; score: number; value?: number | null } | null;
@@ -55,9 +57,11 @@ function Bar({ label, value, target, unit = "g" }: { label: string; value: numbe
 export default function DashboardScreen() {
   const [d, setD] = useState<D | null>(null);
   const [err, setErr] = useState(false);
+  const [preview, setPreview] = useState(false);
+  const t = useT();
   const load = async () => {
     const r = await fetch("/api/dashboard").catch(() => null);
-    if (r?.status === 402) { window.location.href = "/app/settings/subscription?expired=1"; return; }
+    if (r?.status === 402) { setPreview(true); return; }
     if (!r?.ok) { setErr(true); return; }
     const data: D = await r.json(); setD(data);
     // A 3–7 day review is written automatically the first time the dashboard opens after it falls due (once a day at most).
@@ -70,6 +74,11 @@ export default function DashboardScreen() {
   };
   useEffect(() => { void load(); const again = () => void load(); window.addEventListener("kotaana:checkin-saved", again); return () => window.removeEventListener("kotaana:checkin-saved", again); }, []);
 
+  if (preview) return <div className="stack">
+    <div><span className="pill orange">KOTAANA</span><h1 style={{ fontSize: 30, margin: "10px 0 4px" }}>{t("preview.tourTitle")}</h1></div>
+    <div className="grid grid2 previewTour">{(["preview.tour1", "preview.tour2", "preview.tour3", "preview.tour4"] as const).map((k, i) => <div className="card" key={k}><span className="tileIcon">{["◒", "◔", "♥", "↗"][i]}</span><p style={{ margin: "8px 0 0" }}>{t(k)}</p></div>)}</div>
+    <PreviewLock feature={t("preview.dashboard")} />
+  </div>;
   return <div className="stack">
     <div><span className="pill orange">TODAY</span><h1 style={{ fontSize: 30, margin: "10px 0 4px" }}>{d?.name ? `Hi, ${d.name.split(" ")[0]}` : "Your day, organized."}</h1><p className="subtitle">Your workout and meals are ready. Everything below comes from what you record.</p></div>
     {d?.community && <div className="communityBanner">🏷 You're part of the {d.community.name} {KIND[d.community.type] || "coach"} community{d.community.paused ? " (paused by your coach)" : ""}.</div>}

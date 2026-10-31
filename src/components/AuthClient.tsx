@@ -4,6 +4,7 @@ import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Icon, Wordmark } from "./Brand";
+import LanguagePicker from "./LanguagePicker";
 
 type Gender = "" | "male" | "female" | "other" | "prefer_not";
 
@@ -48,7 +49,7 @@ function AuthInner({ googleEnabled }: { googleEnabled: boolean }) {
     try { await signIn("google", { callbackUrl: "/auth/complete" }); } catch { setError("Google sign-in is not configured on this deployment."); setBusy(false); }
   };
 
-  return <main className="ktAuth"><div className="ktAuthCard">
+  return <main className="ktAuth"><div style={{ position: "absolute", top: 14, right: 14 }}><LanguagePicker compact /></div><div className="ktAuthCard">
     <Link href="/" className="ktBack" aria-label="Back to start"><Icon name="back" size={26} /></Link>
     <Wordmark size="md" />
     <h1 className="ktTitle">{signup ? "Create Your Account" : "Welcome Back"}</h1>
