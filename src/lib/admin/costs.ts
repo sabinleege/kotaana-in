@@ -43,7 +43,9 @@ export async function costReport() {
 
   let storage: { table: string; bytes: number; rows: number }[] = [];
   try {
-    storage = (await prisma.$queryRaw<{ table: string; bytes: bigint; rows: bigint }[]>`SELECT relname AS "table", pg_total_relation_size(relid) AS bytes, n_live_tup AS rows FROM pg_catalog.pg_stat_user_tables ORDER BY pg_total_relation_size(relid) DESC LIMIT 14`).map((r) => ({ table: r.table, bytes: Number(r.bytes), rows: Number(r.rows) }));
+    // Only the app's own schema (DATABASE_URL ?schema=…), not other schemas in the same database.
+    let schema = "public"; try { schema = new URL(process.env.DATABASE_URL || "").searchParams.get("schema") || "public"; } catch {}
+    storage = (await prisma.$queryRaw<{ table: string; bytes: bigint; rows: bigint }[]>`SELECT relname AS "table", pg_total_relation_size(relid) AS bytes, n_live_tup AS rows FROM pg_catalog.pg_stat_user_tables WHERE schemaname = ${schema} ORDER BY pg_total_relation_size(relid) DESC LIMIT 14`).map((r) => ({ table: r.table, bytes: Number(r.bytes), rows: Number(r.rows) }));
   } catch {}
   const summaries = await prisma.periodSummary.aggregate({ _count: true, _sum: { rowsCompacted: true } }).catch(() => null);
 

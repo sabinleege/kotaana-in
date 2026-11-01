@@ -76,14 +76,26 @@ END $$`,
 
 (async () => {
   if (!process.env.DATABASE_URL) { console.warn("[schema] DATABASE_URL not set — skipping schema update."); return; }
+  // Prisma reads the tables from the schema named in DATABASE_URL (?schema=kotaana); raw SQL does not, so the same
+  // search_path is set for every statement. Without this the changes went to the "public" schema instead.
+  let schema = "public";
+  try { schema = new URL(process.env.DATABASE_URL).searchParams.get("schema") || "public"; } catch {}
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(schema)) { console.warn(`[schema] unexpected schema name "${schema}" — skipping.`); return; }
   const db = new PrismaClient();
-  // Each statement is tried on its own, so one failure no longer skips every statement after it.
-  let ok = 0; const failed = [];
+  // One transaction, so SET LOCAL holds even behind a connection pooler. Each statement runs under its own savepoint:
+  // a failure is rolled back on its own and never skips the statements after it.
+  let ok = 0;
   try {
-    for (const sql of STATEMENTS) {
-      try { await db.$executeRawUnsafe(sql); ok++; }
-      catch (e) { failed.push(sql.slice(0, 90)); console.warn("[schema] FAILED:", sql.slice(0, 90), "→", e && e.message ? e.message : e); }
-    }
-    console.log(`[schema] ${ok} of ${STATEMENTS.length} additive statements applied.${failed.length ? " Run `node scripts/apply-safe-schema.js` with DATABASE_URL set to fix the rest." : ""}`);
+    await db.$transaction(async (tx) => {
+      await tx.$executeRawUnsafe(`SET LOCAL search_path TO "${schema}"`);
+      for (const sql of STATEMENTS) {
+        await tx.$executeRawUnsafe("SAVEPOINT stmt");
+        try { await tx.$executeRawUnsafe(sql); await tx.$executeRawUnsafe("RELEASE SAVEPOINT stmt"); ok++; }
+        catch (e) { await tx.$executeRawUnsafe("ROLLBACK TO SAVEPOINT stmt"); console.warn("[schema] FAILED:", sql.slice(0, 90), "→", e && e.message ? e.message : e); }
+      }
+    }, { timeout: 120000, maxWait: 20000 });
+    console.log(`[schema] ${ok} of ${STATEMENTS.length} additive statements applied to schema "${schema}".`);
+  } catch (e) {
+    console.warn("[schema] could not update the database during build:", e && e.message ? e.message : e);
   } finally { await db.$disconnect().catch(() => {}); }
 })();

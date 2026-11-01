@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 
 /** Data lifecycle, like a trading chart that keeps candles instead of every tick:
@@ -152,8 +153,8 @@ async function pruneRaw(userId: string, now: Date) {
       prisma.usageCounter.deleteMany({ where: { userId, date: { lt: heavyBefore } } }).then(count("usageCounters")),
       prisma.healthUpdate.updateMany({ where: { userId, createdAt: { lt: heavyBefore }, imageUrl: { not: null } }, data: { imageUrl: null } }).then(count("healthPhotos")),
       // GPS tracks and set-by-set detail are the bulky parts of these rows; the distance, time and totals stay until the light tier.
-      prisma.$executeRaw`UPDATE "run_activities" SET "path" = NULL WHERE "userId" = ${userId} AND "date" < ${heavyBefore} AND "path" IS NOT NULL`.then((c) => { n.gpsPaths = Number(c); }),
-      prisma.$executeRaw`UPDATE "exercise_performances" SET "setReps" = NULL, "notes" = NULL WHERE "userId" = ${userId} AND "date" < ${heavyBefore} AND ("setReps" IS NOT NULL OR "notes" IS NOT NULL)`.then((c) => { n.setDetails = Number(c); }),
+      prisma.runActivity.updateMany({ where: { userId, date: { lt: heavyBefore }, path: { not: Prisma.DbNull } }, data: { path: Prisma.DbNull } }).then(count("gpsPaths")),
+      prisma.exercisePerformance.updateMany({ where: { userId, date: { lt: heavyBefore }, OR: [{ setReps: { not: Prisma.DbNull } }, { notes: { not: null } }] }, data: { setReps: Prisma.DbNull, notes: null } }).then(count("setDetails")),
       prisma.notification.deleteMany({ where: { userId, read: true, createdAt: { lt: new Date(now.getTime() - 60 * DAY) } } }).then(count("notifications")),
     ]);
     // Progress photos: one per pose per month is kept for before/after comparison; the rest of the older photos are deleted.
